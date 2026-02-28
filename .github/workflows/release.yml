@@ -38,27 +38,16 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
+      # 构建多平台镜像并推送到 Docker Hub
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/arm64
           context: .
-          push: false
-          load: true
+          push: true
           tags: ${{ env.VERSION_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Save Docker image to tar
-        run: |
-          docker save ${{ env.VERSION_TAG }} -o tracely-${{ github.ref_name }}.tar
-
-      - name: Upload Docker image as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image
-          path: tracely-${{ github.ref_name }}.tar
-          retention-days: 1
 
   build-binary:
     runs-on: ubuntu-latest
@@ -217,7 +206,7 @@ jobs:
 
   publish-release:
     runs-on: ubuntu-latest
-    needs: [build-docker, build-binary]
+    needs: [build-docker, build-binary, push-docker]
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v4
@@ -229,11 +218,19 @@ jobs:
           merge-multiple: true
           path: ./releases
 
-      - name: Download Docker image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-          path: ./releases
+      # 使用 skopeo 从 Docker Hub 拉取多平台镜像并保存为 tar
+      - name: Install skopeo
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y skopeo
+
+      - name: Pull multi-platform image from Docker Hub to tar
+        run: |
+          mkdir -p ./releases
+          skopeo copy --all \
+            docker://${{ env.VERSION_TAG }} \
+            docker-archive:./releases/tracely-${{ github.ref_name }}.tar \
+            --src-creds ${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Generate checksums
         run: |
