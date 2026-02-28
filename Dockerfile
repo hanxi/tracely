@@ -15,19 +15,26 @@ FROM golang:1.26-alpine AS backend-builder
 
 WORKDIR /app
 
-# 安装构建依赖
-RUN apk add --no-cache git gcc musl-dev
+# 安装构建依赖（纯 Go 实现无需 gcc 和 musl-dev）
+RUN apk add --no-cache git
+
+# 配置国内 Go 镜像源（避免网络超时）
+ENV GOPROXY=https://goproxy.cn,direct
+ENV GOSUMDB=sum.golang.org
 
 COPY go.mod go.sum ./
-RUN go mod download
 
+# 下载依赖（使用国内镜像，提高下载速度和稳定性）
+RUN go mod download -x
+
+# 复制所有 Go 源文件
 COPY . .
 
 # 复制已构建的前端资源
 COPY --from=frontend-builder /app/dashboard/dist ./dashboard/dist
 
-# 编译二进制
-RUN CGO_ENABLED=1 GOOS=linux go build -o tracely .
+# 编译二进制（纯 Go 实现，无需 CGO）
+RUN CGO_ENABLED=0 GOOS=linux go build -o tracely .
 
 # 阶段 3：运行镜像
 FROM alpine:latest
