@@ -252,33 +252,34 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
           RELEASE_NAME="v${VERSION}"
-          RELEASE_BODY="This release is automatically updated from the ${GITHUB_REF_NAME} branch.
+          cat > /tmp/release_body.md << 'EOF'
+          This release is automatically updated from the ${GITHUB_REF_NAME} branch.
 
-## 更新内容
+          ## 更新内容
 
-- 多平台二进制构建（Linux, macOS, Windows）
-- Docker 镜像（linux/amd64, linux/arm64）
-- 版本信息注入
+          - 多平台二进制构建（Linux, macOS, Windows）
+          - Docker 镜像（linux/amd64, linux/arm64）
+          - 版本信息注入
 
-## 快速开始
+          ## 快速开始
 
-### Docker 运行
+          ### Docker 运行
 
-\`\`\`bash
-docker run -p 3001:3001 hanxi/tracely:latest
-\`\`\`
+          ```bash
+          docker run -p 3001:3001 hanxi/tracely:latest
+          ```
 
-### 二进制运行
+          ### 二进制运行
 
-\`\`\`bash
-tar -xzf tracely-${VERSION}-linux-amd64.tar.gz
-./tracely
-\`\`\`
-"
+          ```bash
+          tar -xzf tracely-${VERSION}-linux-amd64.tar.gz
+          ./tracely
+          ```
+          EOF
           gh release create "${GITHUB_REF_NAME}" \
             --prerelease=false \
             --title "Tracely ${RELEASE_NAME}" \
-            --notes "${RELEASE_BODY}" \
+            --body-file /tmp/release_body.md \
             ./releases/tracely-*.tar.gz \
             ./releases/tracely-*.zip \
             ./releases/SHA256SUMS.txt \
