@@ -63,11 +63,13 @@ func Load() (*Config, error) {
 			},
 		}
 
-		// 尝试读取 config.yaml
+		// 尝试读取 config.yaml（支持多个路径）
 		viper.SetConfigName("config")
 		viper.SetConfigType("yaml")
 		viper.AddConfigPath(".")
 		viper.AddConfigPath("./")
+		viper.AddConfigPath("./config")
+		viper.AddConfigPath("/app/config")
 
 		if err = viper.ReadInConfig(); err == nil {
 			fmt.Printf("[Tracely] Loaded config from: %s\n", viper.ConfigFileUsed())

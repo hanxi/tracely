@@ -6,7 +6,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-CONFIG_FILE="$PROJECT_ROOT/config.yaml"
+CONFIG_DIR="$PROJECT_ROOT/config"
+CONFIG_FILE="$CONFIG_DIR/config.yaml"
 CONFIG_EXAMPLE="$PROJECT_ROOT/config.example.yaml"
 
 echo "🔧 Tracely 配置生成工具"
@@ -19,12 +20,18 @@ if [ ! -f "$CONFIG_EXAMPLE" ]; then
     exit 1
 fi
 
+# 创建 config 目录（如果不存在）
+if [ ! -d "$CONFIG_DIR" ]; then
+    mkdir -p "$CONFIG_DIR"
+    echo "📁 已创建 config 目录"
+fi
+
 # 读取示例配置内容
 CONFIG_CONTENT=$(cat "$CONFIG_EXAMPLE")
 
-# 如果 config.yaml 已存在，询问是否覆盖
+# 如果 config/config.yaml 已存在，询问是否覆盖
 if [ -f "$CONFIG_FILE" ]; then
-    echo "⚠️  config.yaml 已存在"
+    echo "⚠️  config/config.yaml 已存在"
     read -p "是否覆盖？(y/N): " confirm
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
         echo "已取消"
@@ -34,7 +41,7 @@ fi
 
 # 写入配置文件（使用 cat 重定向，避免 cp 在挂载卷上的问题）
 echo "$CONFIG_CONTENT" > "$CONFIG_FILE"
-echo "✅ 已生成 config.yaml"
+echo "✅ 已生成 config/config.yaml"
 echo ""
 
 # 生成 JWT Secret
@@ -92,7 +99,7 @@ echo "   - App Secret: 已生成"
 echo "   - 管理员密码：$password"
 echo ""
 echo "🚀 下一步:"
-echo "   1. 检查 config.yaml 配置是否正确"
+echo "   1. 检查 config/config.yaml 配置是否正确"
 echo "   2. 运行：docker compose up -d"
 echo "   3. 访问：http://localhost:3001"
 echo "   4. 使用 admin / $password 登录 Dashboard"
