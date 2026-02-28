@@ -12,7 +12,6 @@ env:
   DOCKER_IMAGE: hanxi/tracely
   VERSION_TAG: hanxi/tracely:${{ github.ref_name }}
   LATEST_TAG: hanxi/tracely:latest
-  STABLE_TAG: hanxi/tracely:stable
 
 permissions:
   contents: write
@@ -56,7 +55,7 @@ jobs:
         run: |
           TAGS="${{ env.VERSION_TAG }}"
           if [[ $GITHUB_REF == refs/tags/v* ]]; then
-            TAGS="${TAGS},${{ env.LATEST_TAG }},${{ env.STABLE_TAG }}"
+            TAGS="${TAGS},${{ env.LATEST_TAG }}"
           elif [[ $GITHUB_REF_NAME == 'main' ]]; then
             TAGS="${TAGS},${{ env.LATEST_TAG }}"
           fi
@@ -108,7 +107,6 @@ jobs:
 
           - **Docker Hub**: [hanxi/tracely:${VERSION}]($DOCKERHUB_URL)
           - **Latest**: \`docker pull hanxi/tracely:latest\`
-          - **Stable**: \`docker pull hanxi/tracely:stable\`
 
           ## 快速开始
 
