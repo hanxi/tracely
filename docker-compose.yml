@@ -13,6 +13,9 @@ services:
       - "3001:3001"
     volumes:
       - ./data:/app/data
-      - ./config.yaml:/app/config.yaml
+      - type: bind
+        source: ./config.yaml
+        target: /app/config.yaml
+        create_host_path: true
     environment:
       - TZ=Asia/Shanghai
