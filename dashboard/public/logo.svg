@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42B883;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#35495E;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 背景圆环 - 代表监控范围 -->
+  <circle cx="64" cy="64" r="56" fill="none" stroke="url(#grad1)" stroke-width="8" opacity="0.3"/>
+  
+  <!-- 雷达扫描效果 -->
+  <path d="M64 8 A56 56 0 0 1 120 64" fill="none" stroke="#42B883" stroke-width="6" stroke-linecap="round">
+    <animateTransform attributeName="transform" type="rotate" from="0 64 64" to="360 64 64" dur="3s" repeatCount="indefinite"/>
+  </path>
+  
+  <!-- 中心监控点 -->
+  <circle cx="64" cy="64" r="12" fill="#42B883"/>
+  
+  <!-- 错误追踪标记 -->
+  <path d="M64 28 L68 52 L92 52 L74 68 L80 92 L64 76 L48 92 L54 68 L36 52 L60 52 Z" fill="#35495E" opacity="0.8"/>
+  
+  <!-- 数据流线条 -->
+  <circle cx="64" cy="64" r="28" fill="none" stroke="#42B883" stroke-width="2" opacity="0.5">
+    <animate attributeName="r" values="28;35;28" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.5;0.2;0.5" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>

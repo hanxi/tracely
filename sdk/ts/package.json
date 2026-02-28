@@ -1,0 +1,32 @@
+{
+  "name": "@hanxi/tracely-sdk",
+  "version": "1.0.0",
+  "description": "Tracely monitoring SDK for TypeScript/JavaScript",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build",
+    "prepublishOnly": "npm run build",
+    "test:data": "bun run test-data.ts"
+  },
+  "keywords": [
+    "monitoring",
+    "error-tracking",
+    "analytics"
+  ],
+  "author": "hanxi",
+  "license": "MIT",
+  "dependencies": {
+    "crypto-js": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/crypto-js": "^4.2.0",
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  }
+}

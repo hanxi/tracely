@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vue Dashboard Template</title>
+  <meta name="description" content="A professional dashboard template built with Nuxt UI, featuring multiple pages, data visualization, and comprehensive management capabilities for creating powerful admin interfaces.">
+  <script>
+    // 防止主题切换闪屏 - 在 Vue 加载前读取并应用主题
+    (function() {
+      const theme = localStorage.getItem('vueuse-color-mode')
+      if (theme) {
+        document.documentElement.classList.add(theme === 'dark' ? 'dark' : theme === 'light' ? '' : 'system')
+        if (theme === 'auto') {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          if (prefersDark) {
+            document.documentElement.classList.add('dark')
+          }
+        }
+      }
+    })()
+  </script>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html>

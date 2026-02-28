@@ -1,0 +1,26 @@
+# 服务配置
+port: "3001"
+dbPath: "./data/tracely.db"
+rateLimit: 60
+nonceTTL: 300
+timestampTTL: 300
+
+# 数据清理配置
+activeLogRetentionDays: 90  # 活跃日志保留天数（0=不清理）
+
+# JWT 配置（Dashboard 登录）
+jwt:
+  secret: "your-jwt-secret-please-change-this-to-32-chars"
+  expireHours: 24
+
+# 多应用配置（SDK 上报）
+apps:
+  - appId: "my-app-id"
+    appName: "我的应用"
+    appSecret: "my-app-secret-please-change-this-to-32-chars"
+
+# 多用户配置（Dashboard 登录）
+users:
+  - username: "admin"
+    # 使用 go run ./cmd/hashpwd/main.go yourpassword 生成
+    passwordHash: "$2a$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
