@@ -10,7 +10,7 @@
 - 🔐 **安全认证**：AppID + HMAC 签名验证，时间戳防过期，Nonce 防重放；Dashboard 支持 JWT 登录
 - 🚦 **限速保护**：IP 维度限速，防止恶意刷数据
 - 🗂️ **错误去重**：相同错误合并记录，统计出现次数
-- 🪶 **轻量部署**：Go + SQLite，单二进制文件，无外部依赖
+          - 多平台二进制构建（Linux, macOS）
 - 🎨 **内嵌 Dashboard**：前端资源打包到后端，单个二进制文件即可运行
 - 🌙 **现代化 UI**：基于 Nuxt UI，支持明暗色模式、响应式布局
 - 🔄 **多应用支持**：支持多应用配置，可在 Dashboard 中切换查看
@@ -20,7 +20,30 @@
 
 ## 快速开始
 
-### 1. 配置
+### 方案一：Docker Compose 部署（推荐）
+
+**一键部署：**
+
+```bash
+# 1. 生成配置文件（在 Docker 容器中执行，无需本地 Go 环境）
+docker-compose run --rm tracely ./scripts/gen-config.sh
+
+# 2. 启动服务
+docker-compose up -d
+
+# 3. 访问 Dashboard
+# http://localhost:3001
+# 用户名：admin
+# 密码：你在脚本运行时设置的密码（默认：admin123）
+```
+
+**配置说明：**
+- `gen-config.sh` 脚本会自动生成 JWT Secret、App Secret 和密码哈希
+- 配置文件保存在 `config.yaml`
+- 数据持久化到 `./data` 目录
+- **无需本地 Go 环境**：所有操作都在 Docker 容器中执行
+
+### 方案二：手动配置
 
 复制配置模板并修改：
 
@@ -59,10 +82,29 @@ users:
 生成密码哈希：
 
 ```bash
-go run ./cmd/hashpwd/main.go yourpassword
+go run main.go -hashpwd -password "yourpassword"
 ```
 
 将生成的哈希值复制到 `config.yaml` 的 `users[].passwordHash` 字段。
+
+生成随机 Secret：
+
+```bash
+go run main.go -generate-secret -secret-length 32
+```
+
+### 方案三：使用环境变量（快速测试）
+
+不想创建 `config.yaml`？可以直接在 `docker-compose.yml` 中使用环境变量：
+
+```yaml
+environment:
+  - JWT_SECRET=your-secret-here
+  - USERS=admin:$2a$10$...
+  - APPS=my-app-id:我的应用:my-secret-here
+```
+
+取消 `docker-compose.yml` 中 environment 配置的注释并修改值即可。
 
 ### 2. 构建
 
@@ -135,7 +177,7 @@ tracely/
 
 | 模块 | 技术 |
 |------|------|
-| 后端 | Go + Gin + GORM |
+| 后端 | Go + Gin + GORM（支持 Linux、macOS）|
 | 数据库 | SQLite |
 | 后端 SDK | Go |
 | 可视化面板 | Vue 3 + Nuxt UI + Vite |

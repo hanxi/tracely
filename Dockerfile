@@ -39,11 +39,16 @@ ARG BUILD_TIME=unknown
 
 WORKDIR /app
 
-# 安装运行时依赖（SQLite 需要）
-RUN apk add --no-cache ca-certificates
+# 安装运行时依赖（SQLite 和脚本需要）
+RUN apk add --no-cache ca-certificates bash
 
 # 复制二进制文件
 COPY --from=backend-builder /app/tracely .
+
+# 复制配置文件和脚本
+COPY config.example.yaml .
+COPY scripts/gen-config.sh ./scripts/
+RUN chmod +x ./scripts/gen-config.sh
 
 # 创建数据目录
 RUN mkdir -p /app/data

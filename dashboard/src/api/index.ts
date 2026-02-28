@@ -25,7 +25,8 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('_tracely_token')
       localStorage.removeItem('_tracely_user')
-      window.location.href = '/login'
+      // Hash 模式下使用 hash 路由跳转
+      window.location.hash = '#/login'
     }
     return Promise.reject(err)
   }

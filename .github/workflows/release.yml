@@ -54,7 +54,7 @@ jobs:
     needs: build-docker
     strategy:
       matrix:
-        platform: [linux/amd64, linux/arm64, darwin/amd64, darwin/arm64, windows/amd64, windows/arm64]
+        platform: [linux/amd64, linux/arm64, darwin/amd64, darwin/arm64]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -88,30 +88,31 @@ jobs:
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           GIT_COMMIT=$(git rev-parse --short HEAD)
           GO_VERSION=$(go version | cut -d' ' -f3)
-          
+
           IFS='/' read -r -a PLATFORM <<< "${{ matrix.platform }}"
           GOOS=${PLATFORM[0]}
           GOARCH=${PLATFORM[1]}
-          
+
           EXT=""
           [ "$GOOS" = "windows" ] && EXT=".exe"
-          
+
           OUTPUT_DIR="./releases/${GOOS}-${GOARCH}"
           mkdir -p "$OUTPUT_DIR"
-          
+
           cd dashboard
           bun install
           bun run build
           cd ..
-          
+
           rm -rf ./internal/static
           cp -r ./dashboard/dist ./internal/static
-          
+
+          # 启用 CGO（mattn/go-sqlite3 需要）
           CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build \
             -ldflags="-s -w -X github.com/hanxi/tracely/internal/version.Version=${VERSION} -X github.com/hanxi/tracely/internal/version.BuildTime=${BUILD_TIME} -X github.com/hanxi/tracely/internal/version.GitCommit=${GIT_COMMIT} -X github.com/hanxi/tracely/internal/version.GoVersion=${GO_VERSION}" \
             -o "${OUTPUT_DIR}/tracely${EXT}" \
             .
-          
+
           cp ./config.example.yaml "${OUTPUT_DIR}/"
           cp ./README.md "${OUTPUT_DIR}/"
 
@@ -121,7 +122,7 @@ jobs:
           GOOS=${PLATFORM[0]}
           GOARCH=${PLATFORM[1]}
           OUTPUT_DIR="./releases/${GOOS}-${GOARCH}"
-          
+
           if [ "$GOOS" = "windows" ]; then
             cd "$OUTPUT_DIR"
             zip -r "../../tracely-${{ steps.get_version.outputs.version }}-${GOOS}-${GOARCH}.zip" ./*

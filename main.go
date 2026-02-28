@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hanxi/tracely/dashboard"
@@ -181,24 +180,10 @@ func runServer() {
 		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
 	})
 
-	// 9. SPA 路由支持：所有未匹配的路由返回 index.html
+	// 9. Hash 模式下，只处理根路径，其他路径返回 404
+	// 前端路由由 Vue Router 的 Hash 模式处理，后端不需要处理其他路径
 	r.NoRoute(func(c *gin.Context) {
-		// API 路由不处理
-		if strings.HasPrefix(c.Request.URL.Path, "/api/") ||
-			strings.HasPrefix(c.Request.URL.Path, "/auth/") ||
-			strings.HasPrefix(c.Request.URL.Path, "/report/") ||
-			strings.HasPrefix(c.Request.URL.Path, "/static/") {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
-			return
-		}
-
-		// 返回 index.html
-		data, err := fs.ReadFile(staticFS, "index.html")
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load page"})
-			return
-		}
-		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 	})
 
 	// 10. 启动服务
