@@ -48,14 +48,9 @@ build_frontend() {
     cd dashboard
     npm run build
     cd ..
-    
-    # 复制前端构建产物到 internal/static
-    echo_info "Copying frontend build to internal/static..."
-    rm -rf ./internal/static
-    cp -r ./dashboard/dist ./internal/static
 }
 
-# 编译指定平台的二进制
+# 编译指定平台的二进制（使用 Docker 交叉编译）
 build_binary() {
     local GOOS=$1
     local GOARCH=$2
@@ -73,23 +68,67 @@ build_binary() {
     
     mkdir -p "$OUTPUT_DIR"
     
-    # 编译 tracely（注入版本信息）
-    CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build \
-        -ldflags="-s -w -X github.com/hanxi/tracely/internal/version.Version=${VERSION} -X github.com/hanxi/tracely/internal/version.BuildTime=${BUILD_TIME} -X github.com/hanxi/tracely/internal/version.GitCommit=${GIT_COMMIT} -X github.com/hanxi/tracely/internal/version.GoVersion=$(go version | cut -d' ' -f3)" \
-        -o "${OUTPUT_DIR}/${TRACELY_BIN}" \
-        .
+    # 获取当前工作目录绝对路径
+    local WORK_DIR=$(pwd)
     
-    # 编译 hashpwd
-    CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build \
-        -ldflags="-s -w" \
-        -o "${OUTPUT_DIR}/${HASHPWD_BIN}" \
-        ./cmd/hashpwd
-    
-    # 复制配置文件和说明
-    cp ./config.example.yaml "${OUTPUT_DIR}/"
-    cp ./README.md "${OUTPUT_DIR}/"
-    
-    echo_info "Built successfully: ${OUTPUT_DIR}/"
+    # 使用 Docker 交叉编译（支持 CGO）
+    if [ "$GOOS" = "linux" ]; then
+        # 使用 Debian 镜像（支持交叉编译工具链）
+        local BASE_IMAGE="golang:1.26"
+        
+        echo_info "Using Docker with cross-compilation for ${GOARCH}..."
+        
+        # 在 Docker 容器中编译（全部使用交叉编译工具链）
+        docker run --rm \
+            -v "${WORK_DIR}:/app" \
+            -v "${WORK_DIR}/${OUTPUT_DIR}:/output" \
+            -w /app \
+            -e VERSION="${VERSION}" \
+            -e BUILD_TIME="${BUILD_TIME}" \
+            -e GIT_COMMIT="${GIT_COMMIT}" \
+            -e OUTPUT_DIR="${OUTPUT_DIR}" \
+            -e GOARCH="${GOARCH}" \
+            ${BASE_IMAGE} \
+            bash -c "\
+                apt-get update && apt-get install -y gcc-x86-64-linux-gnu gcc-aarch64-linux-gnu musl-dev musl-tools && \
+                if [ \"\${GOARCH}\" = \"amd64\" ]; then \
+                    export CC=x86_64-linux-gnu-gcc; \
+                elif [ \"\${GOARCH}\" = \"arm64\" ]; then \
+                    export CC=aarch64-linux-gnu-gcc; \
+                fi && \
+                cd dashboard && npm install && npm run build && cd .. && \
+                rm -rf ./internal/static && cp -r ./dashboard/dist ./internal/static && \
+                CGO_ENABLED=1 GOOS=linux GOARCH=\${GOARCH} CC=\${CC} go build \
+                    -buildvcs=false \
+                    -ldflags=\"-s -w -X github.com/hanxi/tracely/internal/version.Version=${VERSION} -X github.com/hanxi/tracely/internal/version.BuildTime=${BUILD_TIME} -X github.com/hanxi/tracely/internal/version.GitCommit=${GIT_COMMIT} -X github.com/hanxi/tracely/internal/version.GoVersion=\$(go version | cut -d' ' -f3)\" \
+                    -o /output/${TRACELY_BIN} \
+                    . && \
+                CGO_ENABLED=1 GOOS=linux GOARCH=\${GOARCH} CC=\${CC} go build \
+                    -buildvcs=false \
+                    -ldflags=\"-s -w\" \
+                    -o /output/${HASHPWD_BIN} \
+                    ./cmd/hashpwd && \
+                cp ./config.example.yaml /output/ && \
+                cp ./README.md /output/"
+        
+        echo_info "Built successfully: ${OUTPUT_DIR}/"
+    else
+        # 本地编译（非 Linux 平台）
+        CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build \
+            -ldflags="-s -w -X github.com/hanxi/tracely/internal/version.Version=${VERSION} -X github.com/hanxi/tracely/internal/version.BuildTime=${BUILD_TIME} -X github.com/hanxi/tracely/internal/version.GitCommit=${GIT_COMMIT} -X github.com/hanxi/tracely/internal/version.GoVersion=$(go version | cut -d' ' -f3)" \
+            -o "${OUTPUT_DIR}/${TRACELY_BIN}" \
+            .
+        
+        CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build \
+            -ldflags="-s -w" \
+            -o "${OUTPUT_DIR}/${HASHPWD_BIN}" \
+            ./cmd/hashpwd
+        
+        cp ./config.example.yaml "${OUTPUT_DIR}/"
+        cp ./README.md "${OUTPUT_DIR}/"
+        
+        echo_info "Built successfully: ${OUTPUT_DIR}/"
+    fi
 }
 
 # 打包为 zip
