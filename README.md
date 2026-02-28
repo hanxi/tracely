@@ -10,7 +10,7 @@
 - 🔐 **安全认证**：AppID + HMAC 签名验证，时间戳防过期，Nonce 防重放；Dashboard 支持 JWT 登录
 - 🚦 **限速保护**：IP 维度限速，防止恶意刷数据
 - 🗂️ **错误去重**：相同错误合并记录，统计出现次数
-          - 多平台二进制构建（Linux, macOS）
+- 🏗️ **多平台构建**：支持 Linux 多架构（amd64, arm64）
 - 🎨 **内嵌 Dashboard**：前端资源打包到后端，单个二进制文件即可运行
 - 🌙 **现代化 UI**：基于 Nuxt UI，支持明暗色模式、响应式布局
 - 🔄 **多应用支持**：支持多应用配置，可在 Dashboard 中切换查看
@@ -177,7 +177,7 @@ tracely/
 
 | 模块 | 技术 |
 |------|------|
-| 后端 | Go + Gin + GORM（支持 Linux、macOS）|
+| 后端 | Go + Gin + GORM（支持 Linux）|
 | 数据库 | SQLite |
 | 后端 SDK | Go |
 | 可视化面板 | Vue 3 + Nuxt UI + Vite |
