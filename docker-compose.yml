@@ -1,7 +1,7 @@
 # Tracely Docker Compose 部署配置
 # 使用方法：
-# 1. 运行：docker-compose run --rm tracely ./scripts/gen-config.sh 生成配置
-# 2. 运行：docker-compose up -d
+# 1. 运行：docker compose run --rm tracely ./scripts/gen-config.sh 生成配置
+# 2. 运行：docker compose up -d
 # 3. 访问：http://localhost:3001
 
 services:

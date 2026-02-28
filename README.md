@@ -26,10 +26,10 @@
 
 ```bash
 # 1. 生成配置文件（在 Docker 容器中执行，无需本地 Go 环境）
-docker-compose run --rm tracely ./scripts/gen-config.sh
+docker compose run --rm tracely ./scripts/gen-config.sh
 
 # 2. 启动服务
-docker-compose up -d
+docker compose up -d
 
 # 3. 访问 Dashboard
 # http://localhost:3001
@@ -95,7 +95,7 @@ go run main.go -generate-secret -secret-length 32
 
 ### 方案三：使用环境变量（快速测试）
 
-不想创建 `config.yaml`？可以直接在 `docker-compose.yml` 中使用环境变量：
+不想创建 `config.yaml`？可以直接在 `docker compose.yml` 中使用环境变量：
 
 ```yaml
 environment:
@@ -104,7 +104,7 @@ environment:
   - APPS=my-app-id:我的应用:my-secret-here
 ```
 
-取消 `docker-compose.yml` 中 environment 配置的注释并修改值即可。
+取消 `docker compose.yml` 中 environment 配置的注释并修改值即可。
 
 ### 2. 构建
 
