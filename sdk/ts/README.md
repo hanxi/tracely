@@ -15,31 +15,31 @@ Tracely TypeScript SDK 是一个轻量级的前端监控客户端，支持错误
 ### npm
 
 ```bash
-npm install @hanxi/tracely-sdk
+npm install @imhanxi/tracely-sdk
 ```
 
 ### yarn
 
 ```bash
-yarn add @hanxi/tracely-sdk
+yarn add @imhanxi/tracely-sdk
 ```
 
 ### pnpm
 
 ```bash
-pnpm add @hanxi/tracely-sdk
+pnpm add @imhanxi/tracely-sdk
 ```
 
 ### bun
 
 ```bash
-bun add @hanxi/tracely-sdk
+bun add @imhanxi/tracely-sdk
 ```
 
 ### CDN 引入
 
 ```html
-<script src="https://unpkg.com/@hanxi/tracely-sdk/dist/index.js"></script>
+<script src="https://unpkg.com/@imhanxi/tracely-sdk/dist/index.js"></script>
 ```
 
 ## 配置
@@ -55,7 +55,7 @@ bun add @hanxi/tracely-sdk
 ### 基础用法（纯 JS/TS 项目）
 
 ```typescript
-import { Tracely } from '@hanxi/tracely-sdk'
+import { Tracely } from '@imhanxi/tracely-sdk'
 
 // 创建 SDK 实例
 const tracely = new Tracely({
@@ -74,7 +74,7 @@ tracely.init()
 // main.ts
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
-import { Tracely } from '@hanxi/tracely-sdk'
+import { Tracely } from '@imhanxi/tracely-sdk'
 import App from './App.vue'
 
 const app = createApp(App)
@@ -104,7 +104,7 @@ app.mount('#app')
 // index.tsx
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { Tracely } from '@hanxi/tracely-sdk'
+import { Tracely } from '@imhanxi/tracely-sdk'
 import App from './App'
 
 // 创建并初始化 SDK
@@ -189,7 +189,7 @@ try {
 #### captureError()
 
 ```typescript
-import { captureError } from '@hanxi/tracely-sdk'
+import { captureError } from '@imhanxi/tracely-sdk'
 
 captureError(config: TracelyConfig, error: Error, info?: string): void
 ```
@@ -199,7 +199,7 @@ captureError(config: TracelyConfig, error: Error, info?: string): void
 #### onRouteChange()
 
 ```typescript
-import { onRouteChange } from '@hanxi/tracely-sdk'
+import { onRouteChange } from '@imhanxi/tracely-sdk'
 
 onRouteChange(newPath: string): void
 ```
