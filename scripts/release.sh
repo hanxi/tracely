@@ -150,8 +150,8 @@ validate_version() {
     fi
 }
 
-# 获取当前分支
-current_branch=$(git rev-parse --abbrev-ref HEAD)
+# 获取当前分支（移除 refs/heads/ 前缀）
+current_branch=$(git rev-parse --abbrev-ref HEAD | sed 's|^heads/||')
 echo -e "${YELLOW}当前分支：${current_branch}${NC}"
 
 # 检查是否有未提交的更改
@@ -203,7 +203,7 @@ fi
 # 拉取最新代码
 echo -e "${YELLOW}正在拉取最新代码...${NC}"
 git fetch origin --tags
-git merge origin/"${current_branch}" --ff-only
+git merge "origin/${current_branch}" --ff-only
 
 # 创建 tag
 echo -e "${GREEN}创建 tag: ${new_tag}${NC}"
