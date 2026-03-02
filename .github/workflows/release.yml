@@ -79,11 +79,8 @@ jobs:
     needs: build-and-push-docker
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install GitHub CLI
-        run: |
-          sudo apt update
-          sudo apt install -y gh
+        with:
+          fetch-depth: 0
 
       - name: Create GitHub Release
         env:
@@ -98,44 +95,27 @@ jobs:
             RELEASE_NAME="${VERSION}"
             IS_PRERELEASE=true
           fi
-          DOCKERHUB_URL="https://hub.docker.com/r/hanxi/tracely/tags"
-          cat > /tmp/release_body.md << EOF
-          This release is automatically updated from the \${GITHUB_REF_NAME} branch.
 
+          # 自动生成更新内容（基于 commit log）
+          CHANGELOG=$(git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s" 2>/dev/null || git log --pretty=format:"- %s" -10)
+          
+          cat > /tmp/release_body.md << EOF
           ## 更新内容
 
-          - 多平台 Docker 镜像（linux/amd64, linux/arm64）
-          - 版本信息注入
-
-          ## Docker 镜像
-
-          - **Docker Hub**: [hanxi/tracely:${VERSION}]($DOCKERHUB_URL)
+          ${CHANGELOG}
           EOF
+
           # 检查 Release 是否已存在
           if gh release view "${VERSION}" &>/dev/null; then
             echo "Release ${VERSION} exists, updating..."
-            if [[ $IS_PRERELEASE == true ]]; then
-              gh release edit "${VERSION}" \
-                --prerelease=true \
-                --title "Tracely ${RELEASE_NAME} (Pre-release)" \
-                --notes-file /tmp/release_body.md
-            else
-              gh release edit "${VERSION}" \
-                --prerelease=false \
-                --title "Tracely ${RELEASE_NAME}" \
-                --notes-file /tmp/release_body.md
-            fi
+            gh release edit "${VERSION}" \
+              --prerelease=${IS_PRERELEASE} \
+              --title "Tracely ${RELEASE_NAME}" \
+              --notes-file /tmp/release_body.md
           else
             echo "Creating new release ${VERSION}..."
-            if [[ $IS_PRERELEASE == true ]]; then
-              gh release create "${VERSION}" \
-                --prerelease=true \
-                --title "Tracely ${RELEASE_NAME} (Pre-release)" \
-                --notes-file /tmp/release_body.md
-            else
-              gh release create "${VERSION}" \
-                --prerelease=false \
-                --title "Tracely ${RELEASE_NAME}" \
-                --notes-file /tmp/release_body.md
-            fi
+            gh release create "${VERSION}" \
+              --prerelease=${IS_PRERELEASE} \
+              --title "Tracely ${RELEASE_NAME}" \
+              --notes-file /tmp/release_body.md
           fi
