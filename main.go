@@ -120,10 +120,7 @@ func runServer() {
 	// 3. 启动 Nonce 清理任务
 	middleware.StartNonceCleaner(cfg.NonceTTL)
 
-	// 4. 启动活跃日志定时清理任务
-	model.StartActiveLogCleanup(db, cfg.ActiveLogRetentionDays)
-
-	// 5. 创建 Gin 实例
+	// 4. 创建 Gin 实例
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
@@ -147,10 +144,15 @@ func runServer() {
 	api := r.Group("/api")
 	api.Use(middleware.JWTAuth(cfg.JWT.Secret))
 	{
-		api.GET("/apps", handler.GetApps(cfg))     // 应用列表
-		api.GET("/overview", handler.Overview(db)) // 概览数据
-		api.GET("/errors", handler.ErrorList(db))  // 错误列表
-		api.GET("/stats", handler.Stats(db))       // 活跃统计
+		api.GET("/apps", handler.GetApps(cfg))                             // 应用列表
+		api.GET("/overview", handler.Overview(db))                         // 概览数据
+		api.GET("/errors", handler.ErrorList(db))                          // 错误列表
+		api.GET("/events/stats", handler.GetEventStats(db))                // 事件统计
+		api.GET("/events/top", handler.GetTopEvents(db))                   // Top 事件
+		api.GET("/events/daily", handler.GetDailyEvents(db))               // 每日事件统计
+		api.GET("/events/overview", handler.GetEventOverview(db))          // 事件概览
+		api.GET("/events/list", handler.GetEventList(db))                  // 事件列表
+		api.GET("/events/stats/summary", handler.GetEventStatsSummary(db)) // 事件统计摘要
 	}
 
 	// 上报接口组（HMAC 签名验证 + 限速，SDK 调用）
@@ -159,7 +161,7 @@ func runServer() {
 	report.Use(middleware.SignAuth(cfg))
 	{
 		report.POST("/error", handler.ReportError(db))
-		report.POST("/active", handler.ReportActive(db))
+		report.POST("/event", handler.ReportEvent(db, cfg))
 	}
 
 	// 7. 配置静态文件服务（内嵌前端资源）

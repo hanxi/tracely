@@ -1,19 +1,22 @@
 import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
+import { useAppStore } from '@/stores/app'
 
 const api = axios.create({
   baseURL: '',
 })
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('_tracely_token')
-  const appId = localStorage.getItem('_tracely_current_app')
+  // 从 store 获取 token 和 appId
+  const authStore = useAuthStore()
+  const appStore = useAppStore()
   
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+  if (authStore.token) {
+    config.headers.Authorization = `Bearer ${authStore.token}`
   }
   
-  if (appId) {
-    config.params = { ...config.params, appID: appId }
+  if (appStore.currentAppId) {
+    config.params = { ...config.params, appID: appStore.currentAppId }
   }
   
   return config
@@ -23,8 +26,9 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('_tracely_token')
-      localStorage.removeItem('_tracely_user')
+      // 使用 store 的 logout 方法，会自动清除持久化状态
+      const authStore = useAuthStore()
+      authStore.logout()
       // Hash 模式下使用 hash 路由跳转
       window.location.hash = '#/login'
     }

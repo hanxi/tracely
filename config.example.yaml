@@ -5,9 +5,6 @@ rateLimit: 60
 nonceTTL: 300
 timestampTTL: 300
 
-# 数据清理配置
-activeLogRetentionDays: 90  # 活跃日志保留天数（0=不清理）
-
 # JWT 配置（Dashboard 登录）
 jwt:
   secret: "your-jwt-secret-please-change-this-to-32-chars"
@@ -22,5 +19,23 @@ apps:
 # 多用户配置（Dashboard 登录）
 users:
   - username: "admin"
-    # 使用 go run ./cmd/hashpwd/main.go yourpassword 生成
+    # 使用 ./tracely -hashpwd -password yourpassword 生成
     passwordHash: "$2a$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# 自定义事件配置（白名单）
+events:
+  - eventName: "_active"
+    description: "用户活跃事件（内置）"
+    retentionDays: 90
+  - eventName: "click_button"
+    description: "按钮点击事件"
+    retentionDays: 30
+  - eventName: "page_view"
+    description: "页面浏览事件"
+    retentionDays: 90
+  - eventName: "form_submit"
+    description: "表单提交事件"
+    retentionDays: 180
+  - eventName: "purchase"
+    description: "购买转化事件"
+    retentionDays: 365

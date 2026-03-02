@@ -9,10 +9,10 @@ type ErrorPayload struct {
 	AppID   string `json:"appId"`
 }
 
-// ActivePayload 活跃上报数据结构
-type ActivePayload struct {
-	AppID    string `json:"appId"`
-	UserID   string `json:"userId"`
-	Page     string `json:"page"`
-	Duration int    `json:"duration"`
+// EventPayload 事件上报数据结构
+type EventPayload struct {
+	EventName string                 `json:"eventName"`
+	Metadata  map[string]interface{} `json:"metadata"`
+	AppID     string                 `json:"appId"`
+	UserID    string                 `json:"userId"`
 }

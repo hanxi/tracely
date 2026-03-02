@@ -19,14 +19,14 @@ export const useAppStore = defineStore('app', () => {
       // 直接更新，不保留旧数据
       apps.value = appList
       if (appList.length > 0) {
-        // 优先从 localStorage 恢复之前选择的应用 ID
-        const savedAppId = localStorage.getItem('_tracely_current_app')
-        if (savedAppId && appList.some((app: AppInfo) => app.appId === savedAppId)) {
-          currentAppId.value = savedAppId
-        } else {
-          // 如果没有保存的或保存的无效，使用第一个应用
+        // 验证 currentAppId 是否有效
+        const isValid = appList.some((app: AppInfo) => app.appId === currentAppId.value)
+        
+        // 如果当前 appId 无效或为空，使用第一个应用
+        if (!isValid || !currentAppId.value) {
           currentAppId.value = appList[0].appId
         }
+        // 如果 currentAppId 有效，保持不变（Pinia 持久化插件会自动恢复之前的值）
       }
     } catch (error) {
       console.error('Failed to fetch apps:', error)
@@ -35,8 +35,14 @@ export const useAppStore = defineStore('app', () => {
 
   function setCurrentApp(appId: string) {
     currentAppId.value = appId
-    localStorage.setItem('_tracely_current_app', appId)
+    // Pinia 持久化插件会自动保存到 localStorage，不需要手动操作
   }
 
   return { currentAppId, apps, hasMultipleApps, fetchApps, setCurrentApp }
+}, {
+  persist: {
+    key: 'app-store',
+    storage: localStorage,
+    pick: ['currentAppId'],
+  },
 })

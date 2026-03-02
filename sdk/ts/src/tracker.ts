@@ -1,5 +1,10 @@
-import { signedFetch } from './request'
+import { reportEvent } from './event'
 import type { TracelyConfig } from './error'
+
+/**
+ * 内置事件类型常量
+ */
+const EVENT_ACTIVE = '_active'
 
 /**
  * 从 localStorage 读取或生成用户唯一 userId
@@ -31,7 +36,7 @@ let currentPage = window.location.pathname
 let trackerConfig: TracelyConfig | null = null
 
 /**
- * 上报活跃数据
+ * 上报活跃数据（使用统一的事件上报接口）
  */
 function reportActive(page: string, duration: number): void {
   if (!trackerConfig) {
@@ -39,14 +44,13 @@ function reportActive(page: string, duration: number): void {
     return
   }
 
-  const payload = {
-    appId: trackerConfig.appId,
-    userId: getUserId(),
+  // 使用统一的事件上报接口，事件名为 _active
+  // 将 page 和 duration 放入 metadata 中
+  const metadata = {
     page,
     duration: Math.floor(duration / 1000), // 转换为秒
   }
-
-  signedFetch(trackerConfig.host, '/report/active', payload, trackerConfig.appId, trackerConfig.appSecret)
+  reportEvent(trackerConfig, EVENT_ACTIVE, metadata, getUserId())
 }
 
 /**

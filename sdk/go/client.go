@@ -61,10 +61,14 @@ func (c *Client) ReportError(payload ErrorPayload) {
 	}
 }
 
-// ReportActive 上报活跃
-func (c *Client) ReportActive(payload ActivePayload) {
-	// 自动填充 AppID
-	payload.AppID = c.config.AppID
+// ReportEvent 上报事件
+func (c *Client) ReportEvent(eventName string, metadata map[string]interface{}, userID string) {
+	payload := EventPayload{
+		EventName: eventName,
+		Metadata:  metadata,
+		AppID:     c.config.AppID,
+		UserID:    userID,
+	}
 
 	// 生成认证头
 	headers := buildHeaders(c.config.AppID, c.config.AppSecret)
@@ -72,7 +76,7 @@ func (c *Client) ReportActive(payload ActivePayload) {
 	// 将任务投入异步队列（队列满时丢弃，不阻塞）
 	select {
 	case c.queue <- &reportTask{
-		url:     c.config.Host + "/report/active",
+		url:     c.config.Host + "/report/event",
 		body:    payload,
 		headers: headers,
 	}:

@@ -48,7 +48,7 @@ func InitDB(path string) (*gorm.DB, error) {
 		sqlDB.SetMaxIdleConns(1)
 
 		// 自动迁移数据表
-		err = dbInstance.AutoMigrate(&ErrorLog{}, &ActiveLog{})
+		err = dbInstance.AutoMigrate(&ErrorLog{}, &Event{})
 		if err != nil {
 			err = fmt.Errorf("failed to auto migrate: %w", err)
 			return

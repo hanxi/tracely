@@ -1,6 +1,7 @@
 import type { TracelyConfig } from './error'
 import { initErrorCapture, captureError } from './error'
 import { initTracker, onRouteChange } from './tracker'
+import { reportEvent as reportEventFn } from './event'
 
 /**
  * 扩展 Vue App 类型
@@ -65,7 +66,39 @@ export class Tracely {
   reportError(error: Error, info?: string): void {
     captureError(this.config, error, info)
   }
+
+  /**
+   * 手动上报事件
+   * @param eventName 事件名称
+   * @param metadata 元数据（可选，可包含 page 和 duration 等字段）
+   * @param userId 用户 ID（可选，默认使用自动生成的 userId）
+   */
+  reportEvent(
+    eventName: string,
+    metadata?: Record<string, unknown>,
+    userId?: string
+  ): void {
+    const finalUserId = userId || this.getUserId()
+    reportEventFn(this.config, eventName, metadata, finalUserId)
+  }
+
+  /**
+   * 获取用户 ID
+   */
+  private getUserId(): string {
+    const USER_ID_KEY = '_tracely_uid'
+    let userId = localStorage.getItem(USER_ID_KEY)
+    if (!userId) {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        userId = crypto.randomUUID()
+      } else {
+        userId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+      }
+      localStorage.setItem(USER_ID_KEY, userId)
+    }
+    return userId
+  }
 }
 
 export type { TracelyConfig }
-export { captureError, onRouteChange }
+export { captureError, onRouteChange, reportEventFn as reportEvent }

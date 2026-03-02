@@ -12,16 +12,17 @@
 ## 功能特性
 
 - 🐛 **错误收集**：自动捕获 JS 运行时错误、Promise 异常、Vue 组件错误
-- 📊 **活跃统计**：统计 PV/UV、页面停留时长、热门页面排行
-- 📈 **数据概览**：实时展示今日 PV/UV、错误总数、Top 错误列表
+- 📊 **自定义事件**：支持自定义事件上报和统计，灵活的元数据支持
+- 📈 **数据概览**：实时展示今日 PV/UV、错误总数、Top 事件排行
 - 🔐 **安全认证**：AppID + HMAC 签名验证，时间戳防过期，Nonce 防重放；Dashboard 支持 JWT 登录
 - 🚦 **限速保护**：IP 维度限速，防止恶意刷数据
 - 🗂️ **错误去重**：相同错误合并记录，统计出现次数
+- 🎯 **事件白名单**：配置文件控制允许上报的事件类型，防止随意上报
 - 🏗️ **多平台构建**：支持 Linux 多架构（amd64, arm64）
 - 🎨 **内嵌 Dashboard**：前端资源打包到后端，单个二进制文件即可运行
 - 🌙 **现代化 UI**：基于 Nuxt UI，支持明暗色模式、响应式布局
 - 🔄 **多应用支持**：支持多应用配置，可在 Dashboard 中切换查看
-- 🧹 **数据清理**：自动定期清理历史活跃数据，错误数据永久保留
+- 🧹 **数据清理**：自动定期清理历史事件数据，错误数据永久保留
 
 
 **在线体验：**
@@ -33,17 +34,16 @@
 
 ## 快速开始
 
-### 方案一：Docker Compose 部署（推荐）
+### 1. Docker Compose 部署
 
 **一键部署：**
 
 ```bash
-# 1. 生成配置文件（在 Docker 容器中执行，无需本地 Go 环境）
-docker compose run --rm tracely ./scripts/gen-config.sh
-
+# 1. 下载 Docker Compose 配置
+mkdir tracely && cd tracely
+curl -o docker-compose.yaml https://raw.githubusercontent.com/hanxi/tracely/main/docker-compose.yaml
 # 2. 启动服务
 docker compose up -d
-
 # 3. 访问 Dashboard
 # http://localhost:3001
 # 用户名：admin
@@ -52,72 +52,9 @@ docker compose up -d
 
 **配置说明：**
 - `gen-config.sh` 脚本会自动生成 JWT Secret、App Secret 和密码哈希
-- 配置文件保存在 `config.yaml`
+- 配置文件保存在 `./config/config.yaml`
 - 数据持久化到 `./data` 目录
 - **无需本地 Go 环境**：所有操作都在 Docker 容器中执行
-
-### 方案二：手动配置
-
-复制配置模板并修改：
-
-```bash
-cp config.example.yaml config.yaml
-```
-
-编辑 `config.yaml`：
-
-```yaml
-port: "3001"
-dbPath: "./data/tracely.db"
-rateLimit: 60
-nonceTTL: 300
-timestampTTL: 300
-
-# 数据清理配置
-activeLogRetentionDays: 90  # 活跃日志保留天数（0=不清理）
-
-# JWT 配置（Dashboard 登录）
-jwt:
-  secret: "your-jwt-secret-please-change-this-to-32-chars"
-  expireHours: 24
-
-# 多应用配置（SDK 上报）
-apps:
-  - appId: "my-app-id"
-    appSecret: "my-app-secret-please-change-this-to-32-chars"
-
-# 多用户配置（Dashboard 登录）
-users:
-  - username: "admin"
-    passwordHash: "$2a$10$..."  # 使用工具生成
-```
-
-生成密码哈希：
-
-```bash
-go run main.go -hashpwd -password "yourpassword"
-```
-
-将生成的哈希值复制到 `config.yaml` 的 `users[].passwordHash` 字段。
-
-生成随机 Secret：
-
-```bash
-go run main.go -generate-secret -secret-length 32
-```
-
-### 方案三：使用环境变量（快速测试）
-
-不想创建 `config.yaml`？可以直接在 `docker compose.yml` 中使用环境变量：
-
-```yaml
-environment:
-  - JWT_SECRET=your-secret-here
-  - USERS=admin:$2a$10$...
-  - APPS=my-app-id:我的应用:my-secret-here
-```
-
-取消 `docker compose.yml` 中 environment 配置的注释并修改值即可。
 
 ### 2. 构建
 
@@ -217,17 +154,28 @@ tracely/
 
 **指纹生成规则：** `MD5(appId + type + message)`
 
-### 活跃表 `active_logs`
+### 事件表 `events`
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | id | INTEGER | 主键 |
+| event_name | TEXT | 事件名称（如 `_active`、`click_button` 等） |
+| metadata | TEXT | 元数据（JSON 格式，可包含 page、duration 等字段） |
 | app_id | TEXT | 应用 ID |
-| user_id | TEXT | 用户唯一标识（前端 localStorage 生成的 UUID） |
-| page | TEXT | 页面路径 |
-| duration | INTEGER | 停留时长（秒） |
-| user_agent | TEXT | 浏览器 UA |
-| created_at | DATETIME | 上报时间 |
+| user_id | TEXT | 用户唯一标识 |
+| created_at | DATETIME | 创建时间 |
+
+**内置事件**：
+- `_active`：用户活跃事件，用于统计 PV/UV
+
+**Metadata 建议格式**：
+```json
+{
+  "page": "/home",
+  "duration": 120,
+  "custom_field": "value"
+}
+```
 
 ---
 
@@ -275,22 +223,31 @@ tracely/
 3. 存在则更新 `count + 1`、`last_seen`、`stack`、`url`
 4. 不存在则新增记录
 
-#### POST `/report/active` 上报活跃
+#### POST `/report/event` 上报事件
 
 **请求体：**
 ```json
 {
+  "eventName": "_active",
+  "metadata": {
+    "page": "/home",
+    "duration": 30,
+    "custom_field": "value"
+  },
   "appId": "my-app-id",
-  "userId": "550e8400-e29b-41d4-a716-446655440000",
-  "page": "/home",
-  "duration": 30
+  "userId": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
 **响应：**
 ```json
-{ "message": "ok" }
+{ "message": "上报成功" }
 ```
+
+**说明**：
+- `eventName` 必须在 `config.yaml` 的事件白名单中
+- `metadata` 为可选字段，支持任意 JSON 对象
+- `_active` 是内置的活跃事件类型
 
 ---
 
@@ -446,20 +403,34 @@ func main() {
         URL:     "/api/user/login",
     })
 
-    // 上报活跃/事件
-    client.ReportActive(tracely.ActivePayload{
-        UserID: "user-123",
-        Page:   "/api/user/login",
-    })
+    // 上报活跃事件（内置事件类型 _active）
+    client.ReportEvent("_active", nil, "user-123", "/api/user/login", 0)
 }
 ```
 
-### Gin 中间件一键接入
+### 手动上报事件
+
+```go
+// 上报自定义事件
+client.ReportEvent("click_button", map[string]interface{}{
+    "button_id": "submit",
+    "page": "/checkout",
+}, "user-123")
+
+// 上报活跃事件（内置事件类型 _active）
+client.ReportEvent("_active", map[string]interface{}{
+    "page": "/home",
+    "duration": 30,
+}, "user-123")
+```
+
+### Gin 框架集成示例
 
 ```go
 import (
+    "github.com/gin-gonic/gin"
     "github.com/hanxi/tracely/sdk/go"
-    tracely_gin "github.com/hanxi/tracely/sdk/go/middleware/gin"
+    "time"
 )
 
 func main() {
@@ -471,10 +442,34 @@ func main() {
 
     r := gin.New()
 
-    // 自动捕获 panic 和请求信息
-    r.Use(tracely_gin.Recovery(client))
-    // 自动统计接口访问（上报到活跃统计）
-    r.Use(tracely_gin.Tracker(client))
+    // 自定义中间件：捕获 panic
+    r.Use(func(c *gin.Context) {
+        defer func() {
+            if err := recover(); err != nil {
+                client.ReportError(tracely.ErrorPayload{
+                    Type:    "panicError",
+                    Message: fmt.Sprintf("%v", err),
+                    Stack:   string(debug.Stack()),
+                    URL:     c.FullPath(),
+                })
+                c.AbortWithStatus(500)
+            }
+        }()
+        c.Next()
+    })
+
+    // 自定义中间件：统计接口访问
+    r.Use(func(c *gin.Context) {
+        start := time.Now()
+        c.Next()
+        duration := int(time.Since(start).Seconds())
+        
+        // 上报活跃事件
+        client.ReportEvent("_active", map[string]interface{}{
+            "page": c.FullPath(),
+            "duration": duration,
+        }, "user-id")
+    })
 
     r.Run(":8080")
 }
@@ -484,16 +479,17 @@ func main() {
 
 - **异步上报**：内置缓冲队列，上报失败不影响主业务
 - **自动重试**：上报失败自动重试，最多重试 3 次
-- **Gin 集成**：提供 Recovery 和 Tracker 中间件，一行代码接入
+- **无框架依赖**：纯函数接口，可集成到任意 Go 框架（Gin、Echo、Fiber 等）
+- **灵活的事件系统**：支持自定义事件名称和元数据
 
 ---
 
 ## Dashboard 面板页面
 
 ### 📊 概览页 `/`
-- **数据卡片**：今日 PV、今日 UV、错误总数、今日新增错误
-- **Top 5 错误**：展示出现次数最多的错误列表（类型、消息、次数）
-- 快速跳转到错误列表页
+- **数据卡片**：今日事件总数、今日活跃 PV、今日活跃 UV、错误总数
+- **Top 5 事件**：展示出现次数最多的事件列表（事件名称、次数）
+- 快速跳转到错误列表页和事件统计页
 
 ### 🐛 错误列表页 `/errors`
 - 表格展示所有错误，字段：错误类型、错误信息、出现次数、最近出现
@@ -502,10 +498,12 @@ func main() {
 - 点击"详情"按钮查看完整错误信息（类型、消息、堆栈、URL、首次/最近出现时间）
 - 支持多应用切换查看
 
-### 📈 活跃统计页 `/stats`
-- 每日统计卡片展示（7/14/30 天可选）
-- 表格展示热门页面排行（页面路径、PV、平均停留时长）
+### 📈 事件统计页 `/events`
+- **事件类型分布**：展示所有事件类型及其数量
+- **每日事件趋势**：表格展示每日事件统计数据
+- **Top 10 事件排行**：展示最热门的事件（支持筛选事件类型）
 - 支持切换统计天数（7 天 / 14 天 / 30 天）
+- 支持按事件类型筛选
 - 支持多应用切换查看
 
 ### 🔐 登录页 `/login`
@@ -525,8 +523,10 @@ func main() {
 
 ## 数据清理策略
 
-- **活跃日志**：每天凌晨 3 点自动清理 N 天前的数据（N 由 `activeLogRetentionDays` 配置，默认 90 天）
+- **事件数据**：根据 `config.yaml` 中每个事件的 `retentionDays` 配置自动清理（0 表示永久保留）
 - **错误日志**：永久保留（不清理），方便历史问题排查和趋势分析
+
+**注意**：活跃事件（`_active`）是一种特殊的自定义事件，默认保留 90 天。
 
 ---
 

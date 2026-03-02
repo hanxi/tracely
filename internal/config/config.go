@@ -11,15 +11,15 @@ import (
 
 // Config 服务器配置
 type Config struct {
-	Port                   string
-	DBPath                 string
-	RateLimit              int
-	NonceTTL               int
-	TimestampTTL           int
-	ActiveLogRetentionDays int // 活跃日志保留天数
-	JWT                    JWT
-	Apps                   []App
-	Users                  []User
+	Port         string
+	DBPath       string
+	RateLimit    int
+	NonceTTL     int
+	TimestampTTL int
+	JWT          JWT
+	Apps         []App
+	Users        []User
+	Events       []EventConfig // 自定义事件配置（白名单）
 }
 
 // App 应用配置（SDK 上报用）
@@ -33,6 +33,13 @@ type App struct {
 type User struct {
 	Username     string `yaml:"username"`
 	PasswordHash string `yaml:"passwordHash"`
+}
+
+// EventConfig 事件配置（白名单）
+type EventConfig struct {
+	EventName     string `yaml:"eventName"`
+	Description   string `yaml:"description"`
+	RetentionDays int    `yaml:"retentionDays"` // 数据保留天数（0=永久保留）
 }
 
 // JWT JWT 配置
@@ -51,12 +58,11 @@ func Load() (*Config, error) {
 	var err error
 	configOnce.Do(func() {
 		configInstance = &Config{
-			Port:                   "3001",
-			DBPath:                 "./tracely.db",
-			RateLimit:              60,
-			NonceTTL:               300,
-			TimestampTTL:           300,
-			ActiveLogRetentionDays: 90, // 默认保留 90 天
+			Port:         "3001",
+			DBPath:       "./tracely.db",
+			RateLimit:    60,
+			NonceTTL:     300,
+			TimestampTTL: 300,
 			JWT: JWT{
 				Secret:      "default-jwt-secret-change-in-production",
 				ExpireHours: 24,
@@ -141,4 +147,24 @@ func (c *Config) GetUser(username string) (User, bool) {
 func (u *User) VerifyPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
 	return err == nil
+}
+
+// IsEventAllowed 检查事件是否在白名单中
+func (c *Config) IsEventAllowed(eventName string) bool {
+	for _, event := range c.Events {
+		if event.EventName == eventName {
+			return true
+		}
+	}
+	return false
+}
+
+// GetEventConfig 获取事件配置
+func (c *Config) GetEventConfig(eventName string) (EventConfig, bool) {
+	for _, event := range c.Events {
+		if event.EventName == eventName {
+			return event, true
+		}
+	}
+	return EventConfig{}, false
 }

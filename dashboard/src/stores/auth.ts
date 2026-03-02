@@ -9,16 +9,20 @@ export const useAuthStore = defineStore('auth', () => {
   function setAuth(newToken: string, newUsername: string) {
     token.value = newToken
     username.value = newUsername
-    localStorage.setItem('_tracely_token', newToken)
-    localStorage.setItem('_tracely_user', newUsername)
+    // Pinia 持久化插件会自动保存，不需要手动操作 localStorage
   }
 
   function logout() {
     token.value = ''
     username.value = ''
-    localStorage.removeItem('_tracely_token')
-    localStorage.removeItem('_tracely_user')
+    // Pinia 持久化插件会自动清除，不需要手动操作 localStorage
   }
 
   return { token, username, isLoggedIn, setAuth, logout }
-}, { persist: true })
+}, {
+  persist: {
+    key: 'auth-store',
+    storage: localStorage,
+    pick: ['token', 'username'],
+  },
+})

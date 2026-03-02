@@ -27,7 +27,10 @@ function generateSignature(
   nonce: string
 ): string {
   const raw = appID + timestamp + nonce
-  return CryptoJS.HmacSHA256(raw, appSecret).toString(CryptoJS.enc.Hex)
+  // 使用 CryptoJS.enc.Utf8.parse 确保字符串编码正确
+  const rawParsed = CryptoJS.enc.Utf8.parse(raw)
+  const keyParsed = CryptoJS.enc.Utf8.parse(appSecret)
+  return CryptoJS.HmacSHA256(rawParsed, keyParsed).toString(CryptoJS.enc.Hex)
 }
 
 /**
@@ -91,38 +94,41 @@ async function reportError(
 }
 
 /**
- * 上报活跃数据
+ * 上报事件数据
  */
-async function reportActive(
+async function reportEvent(
   host: string,
   appId: string,
   appSecret: string,
-  activeData: {
+  eventData: {
+    eventName: string
+    metadata?: Record<string, any>
     appId: string
     userId: string
-    page: string
-    duration: number
   }
 ): Promise<void> {
   const headers = buildHeaders(appId, appSecret)
   
   try {
-    const response = await fetch(host + '/report/active', {
+    const response = await fetch(host + '/report/event', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...headers,
       },
-      body: JSON.stringify(activeData),
+      body: JSON.stringify(eventData),
     })
     
+    const page = eventData.metadata?.page || ''
+    const duration = eventData.metadata?.duration || 0
     if (response.ok) {
-      console.log('✓ 活跃数据上报成功:', activeData.page, `(${activeData.duration}s)`)
+      console.log('✓ 事件上报成功:', eventData.eventName, page, `(${duration}s)`)
     } else {
-      console.error('✗ 活跃数据上报失败:', response.status, response.statusText)
+      const errorText = await response.text()
+      console.error('✗ 事件上报失败:', response.status, response.statusText, errorText)
     }
   } catch (error) {
-    console.error('✗ 活跃数据上报异常:', error)
+    console.error('✗ 事件上报异常:', error)
   }
 }
 
@@ -146,6 +152,19 @@ async function main() {
 
   console.log('🚀 开始生成测试数据...\n')
   console.log('配置:', config)
+  console.log('')
+  
+  // 调试：打印签名信息
+  const testTimestamp = Math.floor(Date.now() / 1000).toString()
+  const testNonce = generateNonce()
+  const testSignature = generateSignature(config.appId, config.appSecret, testTimestamp, testNonce)
+  console.log('调试信息:')
+  console.log('  appId:', config.appId)
+  console.log('  appSecret:', config.appSecret)
+  console.log('  timestamp:', testTimestamp)
+  console.log('  nonce:', testNonce)
+  console.log('  signature:', testSignature)
+  console.log('  raw:', config.appId + testTimestamp + testNonce)
   console.log('')
 
   // 测试页面列表
@@ -174,17 +193,20 @@ async function main() {
     { type: 'apiError', message: 'API Error: /api/users returned 403' },
   ]
 
-  // 生成活跃数据（每个页面 20 条，共 160 条）
-  console.log('📊 生成活跃数据...')
+  // 生成活跃事件数据（每个页面 20 条，共 160 条）
+  console.log('📊 生成活跃事件数据...')
+  const userId = generateUserId()
   for (let i = 0; i < pages.length; i++) {
     for (let j = 0; j < 20; j++) {
-      const userId = generateUserId()
       const duration = Math.floor(Math.random() * 300) + 10 // 10-310 秒
-      await reportActive(config.host, config.appId, config.appSecret, {
+      await reportEvent(config.host, config.appId, config.appSecret, {
+        eventName: '_active',
         appId: config.appId,
         userId,
-        page: pages[i],
-        duration,
+        metadata: {
+          page: pages[i],
+          duration,
+        },
       })
       // 延迟避免触发限流（60 次/分钟）
       await new Promise(resolve => setTimeout(resolve, 120))
@@ -211,7 +233,7 @@ async function main() {
 
   console.log('')
   console.log('✅ 测试数据生成完成！')
-  console.log(`共计：${pages.length * 20} 条活跃数据，${errorTypes.length * 10} 条错误数据`)
+  console.log(`共计：${pages.length * 20} 条活跃事件，${errorTypes.length * 10} 条错误数据`)
 }
 
 // 运行测试

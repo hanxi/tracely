@@ -18,7 +18,7 @@ const isMobile = ref(false)
 const links = [
   { label: '概览', icon: 'i-lucide-layout-dashboard', to: '/' },
   { label: '错误列表', icon: 'i-lucide-bug', to: '/errors' },
-  { label: '活跃统计', icon: 'i-lucide-bar-chart', to: '/stats' },
+  { label: '事件统计', icon: 'i-lucide-activity', to: '/events' },
 ]
 
 function handleLogout() {

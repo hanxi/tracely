@@ -10,7 +10,10 @@ import App from './App.vue'
 import Index from './pages/index.vue'
 import Login from './pages/login.vue'
 import Errors from './pages/errors.vue'
-import Stats from './pages/stats.vue'
+import Events from './pages/events.vue'
+
+// 导入 Store
+import { useAuthStore } from './stores/auth'
 
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate)
@@ -19,7 +22,7 @@ const routes = [
   { path: '/', component: Index },
   { path: '/login', component: Login },
   { path: '/errors', component: Errors },
-  { path: '/stats', component: Stats },
+  { path: '/events', component: Events },
 ]
 
 const router = createRouter({
@@ -29,9 +32,10 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to) => {
-  const token = localStorage.getItem('_tracely_token')
-  if (to.path !== '/login' && !token) return '/login'
-  if (to.path === '/login' && token) return '/'
+  // 从 store 获取 token（Pinia 持久化插件会自动恢复）
+  const authStore = useAuthStore()
+  if (to.path !== '/login' && !authStore.token) return '/login'
+  if (to.path === '/login' && authStore.token) return '/'
 })
 
 const app = createApp(App)

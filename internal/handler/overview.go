@@ -38,11 +38,9 @@ func Overview(db *gorm.DB) gin.HandlerFunc {
 		appID := c.Query("appID")
 
 		// 构建基础查询
-		activeQuery := db.Model(&model.ActiveLog{})
 		errorQuery := db.Model(&model.ErrorLog{})
 
 		if appID != "" {
-			activeQuery = activeQuery.Where("app_id = ?", appID)
 			errorQuery = errorQuery.Where("app_id = ?", appID)
 		}
 
@@ -50,10 +48,10 @@ func Overview(db *gorm.DB) gin.HandlerFunc {
 		now := time.Now()
 		todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
-		// 今日 PV/UV
+		// 今日 PV/UV（使用事件模型，查询 _active 事件）
 		var todayPV, todayUV int64
-		activeQuery.Where("created_at >= ?", todayStart).Count(&todayPV)
-		activeQuery.Where("created_at >= ?", todayStart).Distinct("user_id").Count(&todayUV)
+		todayPV, _ = model.GetEventCount(db, appID, model.EVENT_ACTIVE, todayStart)
+		todayUV, _ = model.GetUniqueUserCount(db, appID, model.EVENT_ACTIVE, todayStart)
 
 		// 错误统计
 		var totalErrors, todayErrors int64

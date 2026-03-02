@@ -41,7 +41,6 @@
       :overlay="true"
       :modal="true"
       title="错误详情"
-      description="查看错误的详细信息"
       :close="{ color: 'neutral', variant: 'ghost' }"
     >
       <template #body>

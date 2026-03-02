@@ -44,7 +44,7 @@
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │                  GORM + SQLite                      │   │
 │  │  - error_logs (错误表，永久保留)                     │   │
-│  │  - active_logs (活跃表，定期清理)                    │   │
+│  │  - events (事件表，按配置清理)                       │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐   │
@@ -77,16 +77,15 @@ internal/
 
 **核心结构：**
 ```go
-type Config struct {
-    Port                   string
-    DBPath                 string
-    RateLimit              int
-    NonceTTL               int
-    TimestampTTL           int
-    ActiveLogRetentionDays int
-    JWT                    JWT
-    Apps                   []App
-    Users                  []User
+	Port         string
+	DBPath       string
+	RateLimit    int
+	NonceTTL     int
+	TimestampTTL int
+	JWT          JWT
+	Apps         []App
+	Users        []User
+	Events       []EventConfig // 自定义事件配置（白名单）
 }
 ```
 
@@ -203,22 +202,26 @@ type ErrorLog struct {
     LastSeen    time.Time `gorm:"index"` // 按最近出现排序
 }
 
-// 活跃日志
-type ActiveLog struct {
-    ID        uint   `gorm:"primaryKey"`
-    AppID     string `gorm:"index"`
-    UserID    string `gorm:"index:idx_user_page"`
-    Page      string `gorm:"index:idx_user_page"`
-    Duration  int
-    UserAgent string
-    CreatedAt time.Time `gorm:"index"`
+// 事件日志（统一模型）
+type Event struct {
+    ID        uint            `gorm:"primaryKey"`
+    EventName string          `gorm:"index:idx_event_name;index:idx_app_event_time"` // 事件名称
+    Metadata  json.RawMessage `gorm:"type:text"`                                      // 元数据（JSON 格式，可包含 page、duration 等字段）
+    AppID     string          `gorm:"index:idx_app_event_time"`                       // 应用 ID
+    UserID    string          `gorm:"index"`                                          // 用户 ID
+    CreatedAt time.Time       `gorm:"index:idx_app_event_time"`                       // 创建时间
 }
+
+// 内置事件类型常量
+const EVENT_ACTIVE = "_active" // 用户活跃事件
 ```
 
 **关键函数：**
 - `GenFingerprint(appID, errType, message)` - 生成错误指纹（MD5）
 - `InitDB(dbPath)` - 初始化数据库连接，执行 AutoMigrate
-- `StartActiveLogCleanup(db, retentionDays)` - 启动定时清理任务
+- `CreateEvent(db, eventName, metadata, appID, userID)` - 创建事件记录（page 和 duration 应放在 metadata 中）
+- `GetEventStats(db, appID, eventName, days)` - 获取事件统计
+- `GetTopEvents(db, appID, days, limit)` - 获取 Top 事件排行
 
 **数据库优化：**
 ```go
@@ -228,6 +231,17 @@ db.Exec("PRAGMA synchronous=NORMAL;")
 db.Exec("PRAGMA cache_size=-65536;")
 db.SetMaxOpenConns(1) // SQLite 只支持单写
 ```
+
+**索引设计：**
+- `error_logs.fingerprint` - 唯一索引，去重查询
+- `error_logs.type` - 按类型筛选
+- `error_logs.app_id` - 按应用筛选
+- `error_logs.last_seen` - 按最近出现排序
+- `events.event_name` - 按事件类型筛选
+- `events.app_id` - 按应用筛选
+- `events.user_id` - UV 统计去重
+- `events.created_at` - 按日期分组
+- `events.(app_id, event_name, created_at)` - 复合索引，优化统计查询
 
 **扩展点：**
 - 新增表：在 `model/` 创建新结构体，添加 `InitDB` 中 AutoMigrate
@@ -259,7 +273,7 @@ dashboard/
 │   ├── pages/               # 页面组件
 │   │   ├── index.vue        # 概览页
 │   │   ├── errors.vue       # 错误列表页
-│   │   ├── stats.vue        # 活跃统计页
+│   │   ├── events.vue       # 事件统计页
 │   │   └── login.vue        # 登录页
 │   ├── components/          # 可复用组件
 │   │   ├── AppSwitcher.vue  # 应用切换
@@ -358,24 +372,22 @@ func Recovery(client *Client) gin.HandlerFunc {
     }
 }
 
-// middleware/gin/tracker.go
-func Tracker(client *Client) gin.HandlerFunc {
+// 示例：在 Gin 中手动集成事件上报
+func TrackerMiddleware(client *Client) gin.HandlerFunc {
     return func(c *gin.Context) {
         start := time.Now()
-        defer func() {
-            client.ReportActive(ActivePayload{
-                Page:     c.FullPath(),
-                Duration: int(time.Since(start).Milliseconds()),
-            })
-        }()
         c.Next()
+        duration := int(time.Since(start).Milliseconds())
+        
+        // 上报活跃事件（内置事件类型 _active）
+        client.ReportEvent("_active", nil, "user-id", c.FullPath(), duration)
     }
 }
 ```
 
 **扩展点：**
-- 新增中间件：在 `middleware/` 创建新框架的中间件（如 Echo、Fiber）
-- 修改上报逻辑：修改 `client.go` 中的 `ReportError`/`ReportActive`
+- 修改上报逻辑：修改 `client.go` 中的 `ReportError`/`ReportEvent`
+- 框架集成：Go SDK 提供纯函数接口，可集成到任意框架（Gin、Echo、Fiber 等）
 
 ---
 
@@ -496,13 +508,9 @@ func Tracker(client *Client) gin.HandlerFunc {
 │     - 遍历 nonceStore                │
 │     - 删除超过 TTL 的 Nonce             │
 │                                      │
-│  2. 活跃日志清理 (每天凌晨 3 点)        │
-│     model.StartActiveLogCleanup()    │
-│     - 计算下一个凌晨 3 点              │
-│     - 等待到时间                     │
-│     - DELETE FROM active_logs        │
-│       WHERE created_at < NOW - N 天   │
-│     - 循环执行                       │
+│  注：事件数据清理由配置文件中的         │
+│      retentionDays 控制，可为每个      │
+│      事件类型单独配置保留天数           │
 └──────────────────────────────────────┘
 ```
 
@@ -578,14 +586,6 @@ SetMaxOpenConns(1)
 SetMaxIdleConns(1)
 ```
 
-**索引设计：**
-- `error_logs.fingerprint` - 唯一索引，去重查询
-- `error_logs.type` - 按类型筛选
-- `error_logs.app_id` - 按应用筛选
-- `error_logs.last_seen` - 按最近出现排序
-- `active_logs.app_id` - 按应用筛选
-- `active_logs.user_id + page` - 复合索引，UV 统计
-- `active_logs.created_at` - 按日期分组
 
 ### 5.2 内存管理
 
