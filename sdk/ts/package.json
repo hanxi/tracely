@@ -21,6 +21,14 @@
   ],
   "author": "hanxi",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hanxi/tracely"
+  },
+  "homepage": "https://github.com/hanxi/tracely#readme",
+  "bugs": {
+    "url": "https://github.com/hanxi/tracely/issues"
+  },
   "dependencies": {
     "crypto-js": "^4.2.0"
   },
