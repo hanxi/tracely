@@ -202,7 +202,8 @@ fi
 
 # 拉取最新代码
 echo -e "${YELLOW}正在拉取最新代码...${NC}"
-git pull origin "${current_branch}" --tags
+git fetch origin --tags
+git merge origin/"${current_branch}" --ff-only
 
 # 创建 tag
 echo -e "${GREEN}创建 tag: ${new_tag}${NC}"
