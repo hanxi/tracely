@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
 
     defaults:
       run:
@@ -53,10 +52,7 @@ jobs:
             require('fs').writeFileSync('package.json', JSON.stringify(p, null, 2));
           "
 
-      - name: Clean npmrc
-        run: |
-          echo "registry=https://registry.npmjs.org/" > /home/runner/work/_temp/.npmrc
-          npm config list
-
       - name: Publish to npm
-        run: npm publish --provenance --access public
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
