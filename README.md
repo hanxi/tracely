@@ -1,3 +1,10 @@
+[![GitHub License](https://img.shields.io/github/license/hanxi/tracely)](https://github.com/hanxi/tracely)
+[![Docker Image Version](https://img.shields.io/docker/v/hanxi/tracely?sort=semver&label=docker%20image)](https://hub.docker.com/r/hanxi/tracely)
+[![Docker Pulls](https://img.shields.io/docker/pulls/hanxi/tracely)](https://hub.docker.com/r/hanxi/tracely)
+[![GitHub Release](https://img.shields.io/github/v/release/hanxi/tracely)](https://github.com/hanxi/tracely/releases)
+[![Visitors](https://api.visitorbadge.io/api/daily?path=hanxi%2Ftracely&label=daily%20visitor&countColor=%232ccce4&style=flat)](https://visitorbadge.io/status?path=hanxi%2Ftracely)
+[![Visitors](https://api.visitorbadge.io/api/visitors?path=hanxi%2Ftracely&label=total%20visitor&countColor=%232ccce4&style=flat)](https://visitorbadge.io/status?path=hanxi%2Ftracely)
+
 # Tracely
 
 一个轻量级的前端监控平台，支持 **错误收集** 和 **用户活跃统计**，可自托管部署。
@@ -15,6 +22,12 @@
 - 🌙 **现代化 UI**：基于 Nuxt UI，支持明暗色模式、响应式布局
 - 🔄 **多应用支持**：支持多应用配置，可在 Dashboard 中切换查看
 - 🧹 **数据清理**：自动定期清理历史活跃数据，错误数据永久保留
+
+
+**在线体验：**
+- 体验地址：https://tracely.hanxi.cc/
+- 用户名：`admin`
+- 密码：`admin123`
 
 ---
 
