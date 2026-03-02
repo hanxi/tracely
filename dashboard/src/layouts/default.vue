@@ -72,7 +72,7 @@ const closeMobileMenu = () => {
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center">
             <img src="/logo.svg" alt="Tracely" class="w-8 h-8">
-            <span v-if="!isCollapsed || isMobile" class="ml-2 text-xl font-bold text-green-500">Tracely</span>
+            <span v-if="!isCollapsed || isMobile" class="ml-2 text-xl font-bold text-success-600 dark:text-success-400">Tracely</span>
           </div>
           <!-- 移动端关闭按钮 -->
           <button 
@@ -80,7 +80,7 @@ const closeMobileMenu = () => {
             @click="closeMobileMenu"
             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
-            <UIcon name="i-lucide-x" class="w-5 h-5 text-gray-500" />
+            <UIcon name="i-lucide-x" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
         <AppSwitcher v-if="!isCollapsed || isMobile" />
@@ -93,7 +93,7 @@ const closeMobileMenu = () => {
           :key="link.to"
           :to="link.to"
           class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors"
-          :class="route.path === link.to ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'"
+          :class="route.path === link.to ? 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'"
           @click="isMobile && closeMobileMenu()"
         >
           <UIcon :name="link.icon" class="w-5 h-5" />
@@ -114,7 +114,7 @@ const closeMobileMenu = () => {
             <button class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
               <UAvatar :alt="auth.username" size="sm" />
               <span v-if="!isCollapsed || isMobile" class="text-sm text-gray-700 dark:text-gray-200">{{ auth.username }}</span>
-              <UIcon v-if="!isCollapsed || isMobile" name="i-lucide-chevron-down" class="w-4 h-4 text-gray-400" />
+              <UIcon v-if="!isCollapsed || isMobile" name="i-lucide-chevron-down" class="w-4 h-4 text-gray-400 dark:text-gray-500" />
             </button>
           </UDropdownMenu>
         </div>

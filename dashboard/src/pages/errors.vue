@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">错误列表</h1>
-      <p class="text-gray-500">查看和管理应用错误</p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">错误列表</h1>
+      <p class="text-gray-500 dark:text-gray-400">查看和管理应用错误</p>
     </div>
 
     <!-- Filters -->
@@ -47,37 +47,37 @@
       <template #body>
         <div v-if="currentError" class="space-y-4">
           <div>
-            <label class="text-sm text-gray-500">类型</label>
+            <label class="text-sm text-gray-500 dark:text-gray-400">类型</label>
             <UBadge :color="currentError.Type === 'jsError' ? 'error' : 'primary'">
               {{ currentError.Type }}
             </UBadge>
           </div>
           
           <div>
-            <label class="text-sm text-gray-500">消息</label>
-            <p class="text-gray-900 bg-gray-50 p-3 rounded">
+            <label class="text-sm text-gray-500 dark:text-gray-400">消息</label>
+            <p class="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 p-3 rounded">
               {{ currentError.Message }}
             </p>
           </div>
           
           <div>
-            <label class="text-sm text-gray-500">堆栈</label>
-            <pre class="text-xs bg-gray-900 text-gray-100 p-3 rounded overflow-auto max-h-40">{{ currentError.Stack }}</pre>
+            <label class="text-sm text-gray-500 dark:text-gray-400">堆栈</label>
+            <pre class="text-xs bg-gray-900 text-gray-100 dark:bg-gray-800 dark:text-gray-200 p-3 rounded overflow-auto max-h-40">{{ currentError.Stack }}</pre>
           </div>
           
           <div>
-            <label class="text-sm text-gray-500">URL</label>
-            <p class="text-gray-900">{{ currentError.URL }}</p>
+            <label class="text-sm text-gray-500 dark:text-gray-400">URL</label>
+            <p class="text-gray-900 dark:text-white">{{ currentError.URL }}</p>
           </div>
           
           <div>
-            <label class="text-sm text-gray-500">首次出现</label>
-            <p class="text-gray-900">{{ currentError.FirstSeen }}</p>
+            <label class="text-sm text-gray-500 dark:text-gray-400">首次出现</label>
+            <p class="text-gray-900 dark:text-white">{{ currentError.FirstSeen }}</p>
           </div>
           
           <div>
-            <label class="text-sm text-gray-500">最近出现</label>
-            <p class="text-gray-900">{{ currentError.LastSeen }}</p>
+            <label class="text-sm text-gray-500 dark:text-gray-400">最近出现</label>
+            <p class="text-gray-900 dark:text-white">{{ currentError.LastSeen }}</p>
           </div>
         </div>
       </template>

@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">活跃统计</h1>
-      <p class="text-gray-500">查看用户访问数据</p>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">活跃统计</h1>
+      <p class="text-gray-500 dark:text-gray-400">查看用户访问数据</p>
     </div>
 
     <!-- Days Selector -->
@@ -16,22 +16,22 @@
     <!-- Daily Stats -->
     <UCard class="mb-6">
       <template #header>
-        <h3 class="text-lg font-semibold">每日统计</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">每日统计</h3>
       </template>
 
       <div v-if="stats.daily?.length" class="grid grid-cols-7 gap-4">
         <div 
           v-for="d in stats.daily" 
           :key="d.date"
-          class="text-center p-4 bg-gray-50 rounded-lg"
+          class="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
         >
-          <p class="text-sm text-gray-500">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
             {{ d.date }}
           </p>
-          <p class="text-lg font-bold text-green-600">
+          <p class="text-lg font-bold text-success-600 dark:text-success-400">
             {{ d.pv }}
           </p>
-          <p class="text-xs text-gray-400">
+          <p class="text-xs text-gray-400 dark:text-gray-500">
             PV
           </p>
         </div>
@@ -49,7 +49,7 @@
     <!-- Top Pages -->
     <UCard>
       <template #header>
-        <h3 class="text-lg font-semibold">热门页面</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">热门页面</h3>
       </template>
 
       <UTable
