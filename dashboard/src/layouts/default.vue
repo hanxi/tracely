@@ -99,6 +99,18 @@ const closeMobileMenu = () => {
           <UIcon :name="link.icon" class="w-5 h-5" />
           <span v-if="!isCollapsed || isMobile">{{ link.label }}</span>
         </RouterLink>
+        
+        <!-- GitHub 链接 -->
+        <div v-if="!isCollapsed || isMobile" class="my-2 border-t border-gray-200 dark:border-gray-700"></div>
+        <a
+          href="https://github.com/hanxi/tracely"
+          target="_blank"
+          class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+          v-if="!isCollapsed || isMobile"
+        >
+          <UIcon name="i-lucide-github" class="w-5 h-5" />
+          <span>GitHub</span>
+        </a>
       </nav>
 
       <!-- Footer -->

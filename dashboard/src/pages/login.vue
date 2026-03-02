@@ -60,6 +60,18 @@
           {{ loading ? '登录中...' : '登录' }}
         </UButton>
       </UForm>
+      
+      <!-- GitHub 链接 -->
+      <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <a
+          href="https://github.com/hanxi/tracely"
+          target="_blank"
+          class="flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+        >
+          <UIcon name="i-lucide-github" class="w-5 h-5" />
+          <span class="text-sm">访问 GitHub 仓库</span>
+        </a>
+      </div>
     </UCard>
 
     <!-- 移除原来的固定位置主题切换按钮 -->
