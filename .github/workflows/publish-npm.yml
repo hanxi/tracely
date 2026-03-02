@@ -11,25 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write    # Trusted Publishing 必须
+      id-token: write
 
     defaults:
       run:
         working-directory: ./sdk/ts
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Use Node.js 18
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
-
-      # ✅ 删除 Authenticate to npm 步骤（不再需要）
+          node-version: '22'
+          # ✅ 不设置 registry-url（避免干扰 Trusted Publishing）
 
       - name: Install dependencies
         run: |
@@ -42,15 +38,15 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Smoke test compiled artifact
+      - name: Smoke test
         run: |
           node -e "import('./dist/index.js').then(() => console.log('smoke test ok')).catch(console.error);"
 
-      - name: Sync package.json version with tag
+      - name: Sync version with tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          echo "Setting package.json version to $VERSION"
+          echo "Setting version to $VERSION"
           node -e "
             let p = require('./package.json');
             p.version = '$VERSION';
@@ -58,5 +54,4 @@ jobs:
           "
 
       - name: Publish to npm
-        # ✅ 无需 NODE_AUTH_TOKEN
         run: npm publish --provenance --access public
