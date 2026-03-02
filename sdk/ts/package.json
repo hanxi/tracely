@@ -1,6 +1,6 @@
 {
   "name": "@imhanxi/tracely-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tracely monitoring SDK for TypeScript/JavaScript",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
