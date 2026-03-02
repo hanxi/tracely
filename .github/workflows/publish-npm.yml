@@ -53,20 +53,10 @@ jobs:
             require('fs').writeFileSync('package.json', JSON.stringify(p, null, 2));
           "
 
-      - name: Debug npmrc
-        run: |
-          echo "=== global npmrc ==="
-          cat ~/.npmrc || echo "no global npmrc"
-          echo "=== project npmrc ==="
-          cat .npmrc || echo "no project npmrc"
-          echo "=== npm config list ==="
-          npm config list
-
       - name: Clean npmrc
         run: |
-          echo "registry=https://registry.npmjs.org/" > ~/.npmrc
-          echo "=== After cleanup ==="
-          cat ~/.npmrc
+          echo "registry=https://registry.npmjs.org/" > /home/runner/work/_temp/.npmrc
+          npm config list
 
       - name: Publish to npm
         run: npm publish --provenance --access public
