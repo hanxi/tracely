@@ -8,7 +8,11 @@ import { reportEvent as reportEventFn } from './event'
  */
 interface VueApp {
   config: {
-    errorHandler?: (err: unknown, instance: unknown, info: string) => void
+    errorHandler?: (
+      err: unknown,
+      instance: any,
+      info: string
+    ) => void
   }
 }
 
