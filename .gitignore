@@ -11,7 +11,7 @@ config/
 # 构建产物
 dist/
 build/
-tracely
+/tracely
 tracely.exe
 
 # 前端依赖

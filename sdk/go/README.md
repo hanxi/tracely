@@ -15,13 +15,13 @@ Tracely Go SDK 是一个轻量级的后端监控客户端，支持错误上报�
 ## 安装
 
 ```bash
-go get github.com/hanxi/tracely/sdk/go
+go get github.com/hanxi/tracely/sdk/go/tracely
 ```
 
 在你的 `go.mod` 文件中添加依赖：
 
 ```go
-require github.com/hanxi/tracely/sdk/go v0.1.0
+require github.com/hanxi/tracely/sdk/go/tracely v0.1.0
 ```
 
 ## 配置
@@ -40,7 +40,7 @@ require github.com/hanxi/tracely/sdk/go v0.1.0
 package main
 
 import (
-    "github.com/hanxi/tracely/sdk/go"
+    "github.com/hanxi/tracely/sdk/go/tracely"
 )
 
 func main() {
@@ -77,7 +77,7 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/hanxi/tracely/sdk/go"
+    "github.com/hanxi/tracely/sdk/go/tracely"
 )
 
 var tracelyClient *tracely.Client
@@ -135,6 +135,66 @@ func main() {
 }
 ```
 
+#### Chi
+
+```go
+package main
+
+import (
+    "net/http"
+
+    "github.com/go-chi/chi/v5"
+    "github.com/go-chi/chi/v5/middleware"
+    "github.com/hanxi/tracely/sdk/go/tracely"
+)
+
+var tracelyClient *tracely.Client
+
+func init() {
+    tracelyClient = tracely.New(tracely.Config{
+        AppID:     "my-app-id",
+        AppSecret: "my-app-secret",
+        Host:      "https://tracely.example.com",
+    })
+}
+
+func main() {
+    r := chi.NewRouter()
+    r.Use(middleware.Recoverer)
+
+    // 自定义 panic 捕获中间件，上报到 Tracely
+    r.Use(func(next http.Handler) http.Handler {
+        return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+            defer func() {
+                if err := recover(); err != nil {
+                    tracelyClient.ReportError(tracely.ErrorPayload{
+                        Type:    "panic",
+                        Message: fmt.Sprintf("%v", err),
+                        Stack:   string(debug.Stack()),
+                        URL:     req.URL.String(),
+                    })
+                    http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+                }
+            }()
+            next.ServeHTTP(w, req)
+        })
+    })
+
+    r.Get("/api/data", func(w http.ResponseWriter, req *http.Request) {
+        // 业务逻辑
+        tracelyClient.ReportEvent("api_call", map[string]interface{}{
+            "endpoint": "/api/data",
+            "method":   "GET",
+        }, "user-123")
+
+        w.Header().Set("Content-Type", "application/json")
+        w.Write([]byte(`{"data": "..."}`))
+    })
+
+    http.ListenAndServe(":8080", r)
+}
+```
+
 #### Echo
 
 ```go
@@ -142,7 +202,7 @@ package main
 
 import (
     "github.com/labstack/echo/v4"
-    "github.com/hanxi/tracely/sdk/go"
+    "github.com/hanxi/tracely/sdk/go/tracely"
 )
 
 var tracelyClient *tracely.Client
