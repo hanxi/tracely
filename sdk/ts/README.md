@@ -276,7 +276,7 @@ signature = HMAC-SHA256(appId + timestamp + nonce, appSecret)
 
 **请求头：**
 - `X-App-Id`：应用 ID
-- `X-Timestamp`：当前时间戳（毫秒）
+- `X-Timestamp`：当前时间戳（秒）
 - `X-Nonce`：随机字符串（防重放）
 - `X-Signature`：签名值
 

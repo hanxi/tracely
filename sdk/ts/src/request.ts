@@ -29,7 +29,8 @@ export function generateSignature(
  * 生成认证请求头
  */
 export function buildHeaders(appID: string, appSecret: string): Record<string, string> {
-  const timestamp = Date.now().toString()
+  // 使用秒级时间戳（与 Go 的 time.Now().Unix() 一致）
+  const timestamp = Math.floor(Date.now() / 1000).toString()
   const nonce = generateNonce()
   const signature = generateSignature(appID, appSecret, timestamp, nonce)
 
