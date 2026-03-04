@@ -150,6 +150,20 @@ validate_version() {
     fi
 }
 
+# 创建并推送 SDK tag
+create_sdk_tag() {
+    local version=$1
+    local sdk_tag="sdk/go/tracely/v${version}"
+    
+    echo -e "${GREEN}创建 SDK tag: ${sdk_tag}${NC}"
+    git tag -a "${sdk_tag}" -m "Release SDK ${sdk_tag}"
+    
+    echo -e "${GREEN}推送 SDK tag 到 GitHub...${NC}"
+    git push origin "${sdk_tag}"
+    
+    echo -e "${GREEN}✓ 成功创建并推送 SDK tag: ${sdk_tag}${NC}"
+}
+
 # 获取当前分支（移除 refs/heads/ 前缀）
 current_branch=$(git rev-parse --abbrev-ref HEAD | sed 's|^heads/||')
 echo -e "${YELLOW}当前分支：${current_branch}${NC}"
@@ -187,6 +201,8 @@ if [ "$DRY_RUN" = true ]; then
     echo -e "  1. git pull origin ${current_branch} --tags"
     echo -e "  2. git tag -a ${new_tag} -m \"Release ${new_tag}\""
     echo -e "  3. git push origin ${new_tag}"
+    echo -e "  4. git tag -a sdk/go/tracely/${new_version} -m \"Release SDK sdk/go/tracely/${new_version}\""
+    echo -e "  5. git push origin sdk/go/tracely/${new_version}"
     exit 0
 fi
 
@@ -214,5 +230,9 @@ echo -e "${GREEN}推送 tag 到 GitHub...${NC}"
 git push origin "${new_tag}"
 
 echo -e "${GREEN}✓ 成功创建并推送 tag: ${new_tag}${NC}"
+
+# 创建 SDK tag
+create_sdk_tag "${new_version}"
+
 echo -e "${YELLOW}GitHub Actions 将自动构建并发布${NC}"
 echo -e "${YELLOW}查看进度：https://github.com/hanxi/tracely/actions${NC}"
