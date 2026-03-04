@@ -39,7 +39,13 @@ bun add @imhanxi/tracely-sdk
 ### CDN 引入
 
 ```html
-<script src="https://unpkg.com/@imhanxi/tracely-sdk/dist/index.js"></script>
+<!-- ES6 模块 -->
+<script type="module">
+  import { Tracely } from 'https://unpkg.com/@imhanxi/tracely-sdk/dist/tracely-sdk.mjs'
+</script>
+
+<!-- 或 UMD 格式 -->
+<script src="https://unpkg.com/@imhanxi/tracely-sdk/dist/tracely-sdk.js"></script>
 ```
 
 ## 配置
@@ -302,8 +308,8 @@ npm run build
 ```
 
 构建产物：
-- `dist/index.js` - CommonJS 格式
-- `dist/index.mjs` - ES Module 格式
+- `dist/tracely-sdk.js` - UMD 格式（兼容 CommonJS 和浏览器直接引用）
+- `dist/tracely-sdk.mjs` - ES Module 格式（推荐用于 ES6 import）
 - `dist/index.d.ts` - TypeScript 类型定义
 
 ## 测试数据生成
