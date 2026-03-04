@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -32,6 +33,7 @@ func (c *Client) sendWithRetry(task *reportTask) {
 		if err == nil {
 			return // 成功则返回
 		}
+		slog.Error("failed to send request", "err", err)
 
 		// 失败则等待 1 秒后重试
 		time.Sleep(time.Second)
