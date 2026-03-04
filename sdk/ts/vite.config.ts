@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import dts from 'vite-plugin-dts'
 
 export default defineConfig({
   build: {
@@ -19,4 +20,9 @@ export default defineConfig({
     // 确保生成正确的 ES6 模块
     target: 'es2020',
   },
+  plugins: [
+    dts({
+      rollupTypes: true,
+    }),
+  ],
 })
