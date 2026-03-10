@@ -79,8 +79,8 @@ const loadData = async () => {
 // 查看事件详情
 const handleViewDetail = async (eventName: string) => {
   currentEventName.value = eventName
-  eventPage.value = 1
   showDetailModal.value = true
+  eventPage.value = 1
   await loadEventDetail()
 }
 
@@ -154,13 +154,6 @@ const handleViewMetadata = (event: EventDetail) => {
 // 监听筛选条件变化，自动加载数据
 watch([selectedDayOption, selectedEventOption], () => {
   loadData()
-})
-
-// 监听分页变化
-watch(eventPage, () => {
-  if (showDetailModal.value) {
-    loadEventDetail()
-  }
 })
 
 // 初始化
@@ -321,7 +314,7 @@ onMounted(() => {
           <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin" />
         </div>
 
-        <div v-else class="space-y-6">
+        <div v-show="!detailLoading" class="space-y-6">
           <!-- 统计摘要 -->
           <div v-if="eventStatsSummary" class="grid grid-cols-3 gap-4">
             <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
@@ -350,9 +343,10 @@ onMounted(() => {
             <!-- 分页 -->
             <div v-if="eventTotal > eventPageSize" class="mt-4 flex justify-center">
               <UPagination
-                v-model="eventPage"
+                :page="eventPage"
                 :total="eventTotal"
-                :page-count="eventPageSize"
+                :items-per-page="eventPageSize"
+                @update:page="(val) => { eventPage = val; loadEventDetail() }"
               />
             </div>
 

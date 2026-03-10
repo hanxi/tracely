@@ -27,10 +27,10 @@
       <!-- Pagination -->
       <div class="mt-4 flex justify-center">
         <UPagination
-          v-model="page"
+          :page="page"
           :total="total"
-          :page-count="pageSize"
-          @update:model-value="loadData"
+          :items-per-page="pageSize"
+          @update:page="(val) => { page = val; loadData() }"
         />
       </div>
     </UCard>
