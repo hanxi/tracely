@@ -44,7 +44,6 @@ export interface TracelyConfig {
   appSecret: string
   host: string
 }
-
 /**
  * 上报错误（内部函数）
  */
@@ -55,9 +54,10 @@ function reportError(config: TracelyConfig, errorData: ErrorData): void {
     return
   }
 
-  signedFetch(config.host, '/report/error', errorData, config.appId, config.appSecret)
+  // 服务端要求 appId 在请求体中（binding:"required"）
+  const body = { ...errorData, appId: config.appId }
+  signedFetch(config.host, '/report/error', body, config.appId, config.appSecret)
 }
-
 /**
  * 初始化错误捕获
  */
