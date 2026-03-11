@@ -33,7 +33,8 @@ const dailyEvents = ref<Array<{ date: string; count: number }>>([])
 // 事件详情弹窗状态
 const showDetailModal = ref(false)
 const currentEventName = ref('')
-const detailLoading = ref(false)
+const listLoading = ref(false)
+const summaryLoading = ref(false)
 const eventList = ref<EventDetail[]>([])
 const eventTotal = ref(0)
 const eventPage = ref(1)
@@ -84,9 +85,24 @@ const handleViewDetail = async (eventName: string) => {
   await loadEventDetail()
 }
 
-// 加载事件详情数据
+// 加载事件列表（翻页时调用）
+const loadEventList = async () => {
+  listLoading.value = true
+  try {
+    const listRes = await getEventList(currentEventName.value, eventPage.value, eventPageSize.value, currentAppID.value)
+    eventList.value = listRes.list
+    eventTotal.value = listRes.total
+  } catch (error) {
+    console.error('Failed to load event list:', error)
+  } finally {
+    listLoading.value = false
+  }
+}
+
+// 加载事件详情数据（首次打开弹窗时调用，同时加载列表和统计摘要）
 const loadEventDetail = async () => {
-  detailLoading.value = true
+  listLoading.value = true
+  summaryLoading.value = true
   try {
     const [listRes, summaryRes] = await Promise.all([
       getEventList(currentEventName.value, eventPage.value, eventPageSize.value, currentAppID.value),
@@ -98,7 +114,8 @@ const loadEventDetail = async () => {
   } catch (error) {
     console.error('Failed to load event detail:', error)
   } finally {
-    detailLoading.value = false
+    listLoading.value = false
+    summaryLoading.value = false
   }
 }
 
@@ -310,13 +327,12 @@ onMounted(() => {
       :close="{ color: 'neutral', variant: 'ghost' }"
     >
       <template #body>
-        <div v-if="detailLoading" class="flex justify-center py-12">
-          <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin" />
-        </div>
-
-        <div v-show="!detailLoading" class="space-y-6">
+        <div class="space-y-6">
           <!-- 统计摘要 -->
-          <div v-if="eventStatsSummary" class="grid grid-cols-3 gap-4">
+          <div v-if="summaryLoading" class="flex justify-center py-4">
+            <UIcon name="i-heroicons-arrow-path" class="w-6 h-6 animate-spin" />
+          </div>
+          <div v-else-if="eventStatsSummary" class="grid grid-cols-3 gap-4">
             <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
               <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">总次数</div>
               <div class="text-2xl font-bold">{{ eventStatsSummary.totalCount.toLocaleString() }}</div>
@@ -337,7 +353,7 @@ onMounted(() => {
             <UTable
               :data="eventList"
               :columns="detailColumns"
-              :loading="detailLoading"
+              :loading="listLoading"
             />
 
             <!-- 分页 -->
@@ -346,12 +362,12 @@ onMounted(() => {
                 :page="eventPage"
                 :total="eventTotal"
                 :items-per-page="eventPageSize"
-                @update:page="(val) => { eventPage = val; loadEventDetail() }"
+                @update:page="(val) => { eventPage = val; loadEventList() }"
               />
             </div>
 
             <UAlert
-              v-if="!detailLoading && eventList.length === 0"
+              v-if="!listLoading && eventList.length === 0"
               color="neutral"
               variant="soft"
               title="暂无数据"
