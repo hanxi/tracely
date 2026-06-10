@@ -6,7 +6,7 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
       <UCard v-for="stat in stats" :key="stat.label">
         <div class="flex items-center gap-4">
           <div 
@@ -76,6 +76,8 @@ const overview = ref({
   todayUV: 0,
   totalErrors: 0,
   todayErrors: 0,
+  todayInstalls: 0,
+  todayUpgrades: 0,
   topErrors: [] as TopError[]
 })
 
@@ -84,14 +86,18 @@ const colorMap: Record<string, { bg: string; text: string }> = {
   primary: { bg: 'bg-primary-100 dark:bg-primary-900', text: 'text-primary-600 dark:text-primary-400' },
   success: { bg: 'bg-success-100 dark:bg-success-900', text: 'text-success-600 dark:text-success-400' },
   error: { bg: 'bg-error-100 dark:bg-error-900', text: 'text-error-600 dark:text-error-400' },
-  warning: { bg: 'bg-warning-100 dark:bg-warning-900', text: 'text-warning-600 dark:text-warning-400' }
+  warning: { bg: 'bg-warning-100 dark:bg-warning-900', text: 'text-warning-600 dark:text-warning-400' },
+  info: { bg: 'bg-blue-100 dark:bg-blue-900', text: 'text-blue-600 dark:text-blue-400' },
+  violet: { bg: 'bg-violet-100 dark:bg-violet-900', text: 'text-violet-600 dark:text-violet-400' }
 }
 
 const stats = [
   { label: '今日 PV', value: () => overview.value.todayPV, icon: 'i-lucide-eye', semanticColor: 'primary' },
   { label: '今日 UV', value: () => overview.value.todayUV, icon: 'i-lucide-users', semanticColor: 'success' },
   { label: '错误总数', value: () => overview.value.totalErrors, icon: 'i-lucide-alert-triangle', semanticColor: 'error' },
-  { label: '今日新增', value: () => overview.value.todayErrors, icon: 'i-lucide-trending-up', semanticColor: 'warning' }
+  { label: '今日新增', value: () => overview.value.todayErrors, icon: 'i-lucide-trending-up', semanticColor: 'warning' },
+  { label: '今日安装', value: () => overview.value.todayInstalls, icon: 'i-lucide-download', semanticColor: 'info' },
+  { label: '今日升级', value: () => overview.value.todayUpgrades, icon: 'i-lucide-arrow-up-circle', semanticColor: 'violet' }
 ].map(stat => ({
   ...stat,
   bgClass: computed(() => `${colorMap[stat.semanticColor].bg} ${colorMap[stat.semanticColor].text}`)

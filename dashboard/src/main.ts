@@ -11,6 +11,7 @@ import Index from './pages/index.vue'
 import Login from './pages/login.vue'
 import Errors from './pages/errors.vue'
 import Events from './pages/events.vue'
+import AppStats from './pages/app-stats.vue'
 
 // 导入 Store
 import { useAuthStore } from './stores/auth'
@@ -23,6 +24,7 @@ const routes = [
   { path: '/login', component: Login },
   { path: '/errors', component: Errors },
   { path: '/events', component: Events },
+  { path: '/app-stats', component: AppStats },
 ]
 
 const router = createRouter({

@@ -64,6 +64,19 @@ export class Tracely {
     }
   }
 
+  reportInstall(version: string, platform: string, userId?: string): void {
+    this.reportEvent('_app_install', { version, platform }, userId)
+  }
+
+  reportUpgrade(fromVersion: string, toVersion: string, platform: string, userId?: string): void {
+    this.reportEvent('_app_upgrade', {
+      version: toVersion,
+      from_version: fromVersion,
+      to_version: toVersion,
+      platform
+    }, userId)
+  }
+
   /**
    * 手动上报错误
    */

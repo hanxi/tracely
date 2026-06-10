@@ -146,6 +146,7 @@ func runServer() {
 	{
 		api.GET("/apps", handler.GetApps(cfg))                             // 应用列表
 		api.GET("/overview", handler.Overview(db))                         // 概览数据
+		api.GET("/app-stats", handler.GetAppStats(db))                     // 应用安装升级统计
 		api.GET("/errors", handler.ErrorList(db))                          // 错误列表
 		api.GET("/events/stats", handler.GetEventStats(db))                // 事件统计
 		api.GET("/events/top", handler.GetTopEvents(db))                   // Top 事件

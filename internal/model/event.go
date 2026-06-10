@@ -9,7 +9,9 @@ import (
 
 // 内置事件类型常量
 const (
-	EVENT_ACTIVE = "_active" // 用户活跃事件
+	EVENT_ACTIVE      = "_active"      // 用户活跃事件
+	EVENT_APP_INSTALL = "_app_install" // 应用安装事件
+	EVENT_APP_UPGRADE = "_app_upgrade" // 应用升级事件
 )
 
 // Event 统一事件模型
@@ -204,6 +206,34 @@ func GetEventList(db *gorm.DB, appID string, eventName string, page int, pageSiz
 		Find(&events).Error
 
 	return events, total, err
+}
+
+// MetadataDistribution metadata 字段分布统计
+type MetadataDistribution struct {
+	Value string `json:"value"`
+	Count int64  `json:"count"`
+}
+
+// GetMetadataDistribution 按 metadata 中的指定字段分组统计
+func GetMetadataDistribution(db *gorm.DB, appID string, eventName string, metadataKey string, days int) ([]MetadataDistribution, error) {
+	since := time.Now().AddDate(0, 0, -days)
+
+	query := db.Model(&Event{}).
+		Select("json_extract(metadata, ?) as value, COUNT(*) as count", "$."+metadataKey).
+		Where("created_at >= ? AND event_name = ?", since, eventName)
+
+	if appID != "" {
+		query = query.Where("app_id = ?", appID)
+	}
+
+	var results []MetadataDistribution
+	err := query.
+		Group("value").
+		Having("value IS NOT NULL").
+		Order("count DESC").
+		Scan(&results).Error
+
+	return results, err
 }
 
 // EventStatsSummary 事件统计摘要

@@ -17,12 +17,14 @@ type ErrorTrend struct {
 
 // DashboardOverview 概览数据响应
 type DashboardOverview struct {
-	TodayPV     int64        `json:"todayPV"`     // 今日 PV
-	TodayUV     int64        `json:"todayUV"`     // 今日 UV
-	TotalErrors int64        `json:"totalErrors"` // 错误总数
-	TodayErrors int64        `json:"todayErrors"` // 今日新增错误
-	TopErrors   []TopError   `json:"topErrors"`   // Top 5 错误
-	ErrorTrend  []ErrorTrend `json:"errorTrend"`  // 近 7 日错误趋势
+	TodayPV       int64        `json:"todayPV"`       // 今日 PV
+	TodayUV       int64        `json:"todayUV"`       // 今日 UV
+	TotalErrors   int64        `json:"totalErrors"`   // 错误总数
+	TodayErrors   int64        `json:"todayErrors"`   // 今日新增错误
+	TodayInstalls int64        `json:"todayInstalls"` // 今日安装数
+	TodayUpgrades int64        `json:"todayUpgrades"` // 今日升级数
+	TopErrors     []TopError   `json:"topErrors"`     // Top 5 错误
+	ErrorTrend    []ErrorTrend `json:"errorTrend"`    // 近 7 日错误趋势
 }
 
 // TopError 顶部错误
@@ -53,6 +55,10 @@ func Overview(db *gorm.DB) gin.HandlerFunc {
 		todayPV, _ = model.GetEventCount(db, appID, model.EVENT_ACTIVE, todayStart)
 		todayUV, _ = model.GetUniqueUserCount(db, appID, model.EVENT_ACTIVE, todayStart)
 
+		// 今日安装/升级数
+		todayInstalls, _ := model.GetEventCount(db, appID, model.EVENT_APP_INSTALL, todayStart)
+		todayUpgrades, _ := model.GetEventCount(db, appID, model.EVENT_APP_UPGRADE, todayStart)
+
 		// 错误统计
 		var totalErrors, todayErrors int64
 		errorQuery.Count(&totalErrors)
@@ -80,12 +86,14 @@ func Overview(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, DashboardOverview{
-			TodayPV:     todayPV,
-			TodayUV:     todayUV,
-			TotalErrors: totalErrors,
-			TodayErrors: todayErrors,
-			TopErrors:   topErrors,
-			ErrorTrend:  errorTrend,
+			TodayPV:       todayPV,
+			TodayUV:       todayUV,
+			TotalErrors:   totalErrors,
+			TodayErrors:   todayErrors,
+			TodayInstalls: todayInstalls,
+			TodayUpgrades: todayUpgrades,
+			TopErrors:     topErrors,
+			ErrorTrend:    errorTrend,
 		})
 	}
 }

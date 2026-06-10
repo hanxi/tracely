@@ -27,6 +27,12 @@ events:
   - eventName: "_active"
     description: "用户活跃事件（内置）"
     retentionDays: 90
+  - eventName: "_app_install"
+    description: "应用安装事件（内置）"
+    retentionDays: 365
+  - eventName: "_app_upgrade"
+    description: "应用升级事件（内置）"
+    retentionDays: 365
   - eventName: "click_button"
     description: "按钮点击事件"
     retentionDays: 30

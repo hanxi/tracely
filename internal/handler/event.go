@@ -206,6 +206,74 @@ func GetEventList(db *gorm.DB) gin.HandlerFunc {
 	}
 }
 
+// AppStatsResponse 应用安装升级统计响应
+type AppStatsResponse struct {
+	InstallTotal  int64                        `json:"installTotal"`
+	InstallToday  int64                        `json:"installToday"`
+	InstallUV     int64                        `json:"installUV"`
+	UpgradeTotal  int64                        `json:"upgradeTotal"`
+	UpgradeToday  int64                        `json:"upgradeToday"`
+	UpgradeUV     int64                        `json:"upgradeUV"`
+	DailyInstalls []model.DailyEvent           `json:"dailyInstalls"`
+	DailyUpgrades []model.DailyEvent           `json:"dailyUpgrades"`
+	VersionDist   []model.MetadataDistribution `json:"versionDist"`
+	PlatformDist  []model.MetadataDistribution `json:"platformDist"`
+}
+
+// GetAppStats 获取应用安装升级统计
+func GetAppStats(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		appID := c.Query("appID")
+		days, _ := strconv.Atoi(c.DefaultQuery("days", "7"))
+		if days < 1 || days > 365 {
+			days = 7
+		}
+
+		since := time.Now().AddDate(0, 0, -days)
+		today := time.Now().Truncate(24 * time.Hour)
+
+		installTotal, _ := model.GetEventCount(db, appID, model.EVENT_APP_INSTALL, since)
+		installToday, _ := model.GetEventCount(db, appID, model.EVENT_APP_INSTALL, today)
+		installUV, _ := model.GetUniqueUserCount(db, appID, model.EVENT_APP_INSTALL, since)
+
+		upgradeTotal, _ := model.GetEventCount(db, appID, model.EVENT_APP_UPGRADE, since)
+		upgradeToday, _ := model.GetEventCount(db, appID, model.EVENT_APP_UPGRADE, today)
+		upgradeUV, _ := model.GetUniqueUserCount(db, appID, model.EVENT_APP_UPGRADE, since)
+
+		dailyInstalls, _ := model.GetDailyEvents(db, appID, model.EVENT_APP_INSTALL, days)
+		dailyUpgrades, _ := model.GetDailyEvents(db, appID, model.EVENT_APP_UPGRADE, days)
+
+		versionDist, _ := model.GetMetadataDistribution(db, appID, model.EVENT_APP_INSTALL, "version", days)
+		platformDist, _ := model.GetMetadataDistribution(db, appID, model.EVENT_APP_INSTALL, "platform", days)
+
+		if dailyInstalls == nil {
+			dailyInstalls = []model.DailyEvent{}
+		}
+		if dailyUpgrades == nil {
+			dailyUpgrades = []model.DailyEvent{}
+		}
+		if versionDist == nil {
+			versionDist = []model.MetadataDistribution{}
+		}
+		if platformDist == nil {
+			platformDist = []model.MetadataDistribution{}
+		}
+
+		c.JSON(http.StatusOK, AppStatsResponse{
+			InstallTotal:  installTotal,
+			InstallToday:  installToday,
+			InstallUV:     installUV,
+			UpgradeTotal:  upgradeTotal,
+			UpgradeToday:  upgradeToday,
+			UpgradeUV:     upgradeUV,
+			DailyInstalls: dailyInstalls,
+			DailyUpgrades: dailyUpgrades,
+			VersionDist:   versionDist,
+			PlatformDist:  platformDist,
+		})
+	}
+}
+
 // GetEventStatsSummary 获取事件统计摘要接口
 func GetEventStatsSummary(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {

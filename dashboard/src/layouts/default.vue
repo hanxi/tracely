@@ -19,6 +19,7 @@ const links = [
   { label: '概览', icon: 'i-lucide-layout-dashboard', to: '/' },
   { label: '错误列表', icon: 'i-lucide-bug', to: '/errors' },
   { label: '事件统计', icon: 'i-lucide-activity', to: '/events' },
+  { label: '应用统计', icon: 'i-lucide-smartphone', to: '/app-stats' },
 ]
 
 function handleLogout() {

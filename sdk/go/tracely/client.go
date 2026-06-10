@@ -8,8 +8,11 @@ import (
 	"time"
 )
 
-// eventActive 内置活跃事件类型常量，与 TS SDK 保持一致
-const eventActive = "_active"
+const (
+	eventActive     = "_active"
+	eventAppInstall = "_app_install"
+	eventAppUpgrade = "_app_upgrade"
+)
 
 // Config 客户端配置
 type Config struct {
@@ -135,6 +138,26 @@ func (c *Client) ReportError(payload ErrorPayload) {
 	default:
 		// 队列满，直接丢弃
 	}
+}
+
+// ReportInstall 上报应用安装事件
+func (c *Client) ReportInstall(version string, platform string, userID string) {
+	metadata := map[string]interface{}{
+		"version":  version,
+		"platform": platform,
+	}
+	c.ReportEvent(eventAppInstall, metadata, userID)
+}
+
+// ReportUpgrade 上报应用升级事件
+func (c *Client) ReportUpgrade(fromVersion string, toVersion string, platform string, userID string) {
+	metadata := map[string]interface{}{
+		"version":      toVersion,
+		"from_version": fromVersion,
+		"to_version":   toVersion,
+		"platform":     platform,
+	}
+	c.ReportEvent(eventAppUpgrade, metadata, userID)
 }
 
 // ReportEvent 上报事件

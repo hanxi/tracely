@@ -16,6 +16,8 @@ export interface OverviewResponse {
   todayUV: number
   totalErrors: number
   todayErrors: number
+  todayInstalls: number
+  todayUpgrades: number
   topErrors: TopError[]
   errorTrend: ErrorTrend[]
 }
