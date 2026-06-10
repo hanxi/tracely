@@ -51,10 +51,30 @@ docker compose up -d
 ```
 
 **配置说明：**
-- `gen-config.sh` 脚本会自动生成 JWT Secret、App Secret 和密码哈希
+- `gen-config.sh` 是一个交互式配置管理工具，支持初始化和后续修改
 - 配置文件保存在 `./config/config.yaml`
 - 数据持久化到 `./data` 目录
 - **无需本地 Go 环境**：所有操作都在 Docker 容器中执行
+
+**配置管理：**
+
+```bash
+# 初始化配置（首次部署）
+docker compose run --rm tracely ./scripts/gen-config.sh init
+
+# 交互式菜单（查看/修改配置）
+docker compose run --rm tracely ./scripts/gen-config.sh
+
+# 常用子命令
+docker compose run --rm tracely ./scripts/gen-config.sh show              # 查看配置摘要
+docker compose run --rm tracely ./scripts/gen-config.sh set-jwt-secret    # 重新生成 JWT Secret
+docker compose run --rm tracely ./scripts/gen-config.sh set-password      # 修改用户密码
+docker compose run --rm tracely ./scripts/gen-config.sh app list          # 查看应用列表
+docker compose run --rm tracely ./scripts/gen-config.sh app add           # 添加新应用
+docker compose run --rm tracely ./scripts/gen-config.sh app set-secret    # 重新生成应用密钥
+docker compose run --rm tracely ./scripts/gen-config.sh app set-id        # 修改应用 ID
+docker compose run --rm tracely ./scripts/gen-config.sh app remove        # 删除应用
+```
 
 ### 2. 构建
 
