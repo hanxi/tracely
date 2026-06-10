@@ -4,7 +4,7 @@
 
 ## 项目概述
 
-Tracely 是一个轻量级前端监控平台，支持错误收集和用户活跃统计。单个二进制文件即可运行（前端资源内嵌到后端）。
+Tracely 是一个轻量级前端监控平台，支持错误收集、用户活跃统计和应用安装/升级追踪。单个二进制文件即可运行（前端资源内嵌到后端）。
 
 ## 常用命令
 
@@ -71,7 +71,7 @@ cd dashboard && bun run lint   # ESLint 检查前端代码
 - `internal/middleware/` — SignAuth (HMAC)、JWTAuth、RateLimit
 - `internal/model/` — GORM 模型 + 数据库初始化 + 定时清理任务
 - `internal/config/` — Viper 配置加载
-- `dashboard/src/` — Vue SPA（pages/、components/、stores/、api/）
+- `dashboard/src/` — Vue SPA（pages/、components/、stores/、api/），包含概览、错误列表、事件统计、应用统计四个页面
 - `sdk/go/tracely/` — Go SDK（异步队列上报，自动重试）
 - `sdk/ts/src/` — TypeScript SDK（浏览器端错误捕获 + 事件上报）
 
@@ -79,14 +79,30 @@ cd dashboard && bun run lint   # ESLint 检查前端代码
 
 `dashboard/` 目录下有一个 `embed.go` 文件，使用 `//go:embed dist` 将构建产物嵌入 Go 二进制。构建顺序：先 `build-frontend` 再 `build-backend`。
 
+### 内置事件类型
+
+内置事件以下划线开头，定义在 `internal/model/event.go`：
+
+| 事件名 | 用途 | SDK 便捷方法 |
+|--------|------|-------------|
+| `_active` | 用户活跃统计（PV/UV） | 自动上报（TS: `initTracker`，Go: 心跳） |
+| `_app_install` | 应用安装追踪 | `ReportInstall(version, platform, userID)` |
+| `_app_upgrade` | 应用升级追踪 | `ReportUpgrade(fromVersion, toVersion, platform, userID)` |
+
+安装/升级事件的 metadata 字段规范：`version`（当前版本）、`platform`（平台标识）、`from_version`/`to_version`（升级专用）。
+
 ### 配置
 
-运行时读取 `config.yaml`（参考 `config.example.yaml`）。多应用通过 `apps[]` 配置，事件白名单通过 `events[]` 配置，每个事件可设置独立的 `retentionDays` 清理策略。
+运行时读取 `config.yaml`（参考 `config.example.yaml`）。多应用通过 `apps[]` 配置，事件白名单通过 `events[]` 配置，每个事件可设置独立的 `retentionDays` 清理策略。内置事件（`_active`、`_app_install`、`_app_upgrade`）也需要在白名单中注册才能生效。
 
 ## Git 提交约定
 
 - 提交信息**禁止**添加 `Co-Authored-By` 尾部标记
 - 遵循 Conventional Commits 格式：`type(scope): description`
+
+## 详细文档
+
+完整文档在 `docs/` 目录下，按主题拆分：架构、API、安全、部署、SDK、开发指南、故障排查等。详见 [docs/README.md](./docs/README.md)。
 
 ## CI/CD
 
