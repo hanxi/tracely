@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -11,10 +12,8 @@ import (
 
 // reportTask 上报任务
 type reportTask struct {
-	url        string
-	body       interface{}
-	headers    map[string]string
-	retryCount int
+	url  string
+	body interface{}
 }
 
 // startQueueWorker 启动异步上报队列消费者
@@ -29,48 +28,41 @@ func (c *Client) startQueueWorker() {
 // sendWithRetry 发送请求，失败自动重试
 func (c *Client) sendWithRetry(task *reportTask) {
 	for i := 0; i < 3; i++ {
-		err := c.send(task.url, task.body, task.headers)
+		err := c.send(task.url, task.body)
 		if err == nil {
-			return // 成功则返回
+			return
 		}
-		slog.Error("failed to send request", "err", err)
-
-		// 失败则等待 1 秒后重试
+		slog.Error("failed to send request", "url", task.url, "err", err)
 		time.Sleep(time.Second)
 	}
-	// 重试 3 次后放弃，不阻塞业务
 }
 
-// send 发送 HTTP POST 请求
-func (c *Client) send(url string, body interface{}, headers map[string]string) error {
-	// 序列化 body 为 JSON
+// send 发送 HTTP POST 请求（每次调用重新生成签名头，避免重试时 nonce 重放）
+func (c *Client) send(url string, body interface{}) error {
 	jsonData, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("failed to marshal body: %w", err)
 	}
 
-	// 创建请求
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// 设置请求头
 	req.Header.Set("Content-Type", "application/json")
-	for k, v := range headers {
+	for k, v := range buildHeaders(c.config.AppID, c.config.AppSecret) {
 		req.Header.Set(k, v)
 	}
 
-	// 发送请求
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// 检查响应状态
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(respBody))
 	}
 
 	return nil

@@ -122,21 +122,14 @@ func (c *Client) startHeartbeatWorker() {
 
 // ReportError 上报错误
 func (c *Client) ReportError(payload ErrorPayload) {
-	// 自动填充 AppID
 	payload.AppID = c.config.AppID
 
-	// 生成认证头
-	headers := buildHeaders(c.config.AppID, c.config.AppSecret)
-
-	// 将任务投入异步队列（队列满时丢弃，不阻塞）
 	select {
 	case c.queue <- &reportTask{
-		url:     c.config.Host + "/report/error",
-		body:    payload,
-		headers: headers,
+		url:  c.config.Host + "/report/error",
+		body: payload,
 	}:
 	default:
-		// 队列满，直接丢弃
 	}
 }
 
@@ -169,17 +162,11 @@ func (c *Client) ReportEvent(eventName string, metadata map[string]interface{}, 
 		UserID:    userID,
 	}
 
-	// 生成认证头
-	headers := buildHeaders(c.config.AppID, c.config.AppSecret)
-
-	// 将任务投入异步队列（队列满时丢弃，不阻塞）
 	select {
 	case c.queue <- &reportTask{
-		url:     c.config.Host + "/report/event",
-		body:    payload,
-		headers: headers,
+		url:  c.config.Host + "/report/event",
+		body: payload,
 	}:
 	default:
-		// 队列满，直接丢弃
 	}
 }
